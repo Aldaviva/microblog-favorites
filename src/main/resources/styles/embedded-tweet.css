@@ -1,0 +1,27 @@
+body { /* JPEG screenshots compress a lot better than PNGs when the tweet contains images, but without transparent backgrounds, we have to matte them */
+	background-color: black;
+}
+
+a[aria-label="View on Twitter"], /* Top-right Twitter icon */
+a[aria-label="Twitter Ads info and privacy"], /* Bottom-right ⓘ icon */
+div[aria-label="Share"] { /* Bottom Share this tweet link */
+    visibility: hidden;
+}
+
+div > div > article > div:first-of-type > a:first-of-type > div > div > div, /* Author avatar */
+div > div > article > article > div:first-of-type > div > a:first-of-type > div > div > div { /* When favoriting a reply, this is the avatar of the user who was replied to */
+	border-radius: 2px !important;
+}
+
+article article div[role=presentation] > div > div > div { /* Quoted avatar */
+	border-radius: 1px !important;
+}
+
+div > div > article > div:first-of-type > a:first-of-type,
+div > div > article > div:first-of-type > a:first-of-type > div:last-of-type, /* Faint circle */
+div > div > article > article > div:first-of-type > div > a:first-of-type,
+div > div > article > article > div:first-of-type > div > a:first-of-type > div:last-of-type, /* Faint circle */
+article article div[role=presentation],
+article article div[role=presentation] > div:last-of-type { /* Faint circle */
+	border-radius: 0 !important;
+}

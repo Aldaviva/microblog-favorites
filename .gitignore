@@ -1,0 +1,8 @@
+.classpath
+.project
+.settings/
+/screenshots/
+target/
+storage.json
+TwitterConfigurationFactory.java
+Twitter API client libraries.xlsx

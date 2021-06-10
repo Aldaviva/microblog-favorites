@@ -1,0 +1,4 @@
+/* remove "← Tweet" toolbar above tweet because it always covers up top of tweet, even if we specify the correct bounding box */
+div[data-testid='primaryColumn'] > div:nth-child(1) > div:nth-child(1) {
+    display: none;
+}

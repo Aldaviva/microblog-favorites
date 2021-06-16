@@ -9,6 +9,7 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Page.AddStyleTagOptions;
 import com.microsoft.playwright.Page.WaitForURLOptions;
 import com.microsoft.playwright.Playwright;
+import com.microsoft.playwright.impl.CustomPlaywrightImpl;
 import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.ScreenshotType;
 import java.io.BufferedOutputStream;
@@ -36,6 +37,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -105,7 +107,8 @@ public class Main {
 		});
 
 		System.out.println("Initializing...");
-		try (Playwright playwright = Playwright.create()) {
+		//only download Chromium (& ffmpeg), not Firefox or WebKit, in order to save download time, download quota, and disk space
+		try (Playwright playwright = CustomPlaywrightImpl.create(Arrays.asList("chromium"))) {
 			final Path storageStatePath = new File(DATA_DIRECTORY, "storage.json").toPath();
 			final Browser loginBrowser = playwright.chromium().launch(new LaunchOptions().setHeadless(false));
 			final BrowserContext loginBrowserContext = loginBrowser.newContext(new NewContextOptions()

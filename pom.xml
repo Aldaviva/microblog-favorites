@@ -26,7 +26,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<playwright.version>1.11.0</playwright.version>
+		<playwright.version>1.12.1</playwright.version>
 		<commons-imaging.version>1.0-alpha2</commons-imaging.version>
 		<twitter4j.version>4.0.6</twitter4j.version>
 	</properties>

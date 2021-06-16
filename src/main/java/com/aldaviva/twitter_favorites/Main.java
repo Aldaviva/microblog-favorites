@@ -74,9 +74,10 @@ public class Main {
 	private static final DateTimeFormatter IPTC_DATE_FORMATTER = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss", Locale.US).withZone(MY_TIME_ZONE);
 	private static final Pattern FILE_BASENAME_EXTENSION_SPLITTER = Pattern.compile("\\.(?=[^\\.]+$)");
 	private static final FilenameFilter SCREENSHOT_FILE_FILTER = new ScreenshotFileFilter();
+	private static final File DATA_DIRECTORY = new File(System.getenv("USERPROFILE"), "Documents/Twitter favorites");
 
 	public static void main(final String[] args) throws IOException, URISyntaxException {
-		final File screenshotsDirectory = new File("screenshots");
+		final File screenshotsDirectory = new File(DATA_DIRECTORY, "screenshots");
 		screenshotsDirectory.mkdirs();
 
 		int subdirectoryId = 0;
@@ -105,7 +106,7 @@ public class Main {
 
 		System.out.println("Initializing...");
 		try (Playwright playwright = Playwright.create()) {
-			final Path storageStatePath = Paths.get("storage.json");
+			final Path storageStatePath = new File(DATA_DIRECTORY, "storage.json").toPath();
 			final Browser loginBrowser = playwright.chromium().launch(new LaunchOptions().setHeadless(false));
 			final BrowserContext loginBrowserContext = loginBrowser.newContext(new NewContextOptions()
 			    .setDeviceScaleFactor(DPI_MULTIPLIER)

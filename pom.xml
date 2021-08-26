@@ -45,7 +45,7 @@
 			<artifactId>commons-imaging</artifactId>
 			<version>${commons-imaging.version}</version>
 		</dependency>
-		
+
 		<!-- Twitter4J -->
 		<dependency>
 			<groupId>org.twitter4j</groupId>
@@ -65,6 +65,28 @@
 					<source>1.8</source>
 					<target>1.8</target>
 				</configuration>
+			</plugin>
+
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.2.4</version>
+				<configuration>
+					<transformers>
+						<transformer
+							implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+							<mainClass>com.aldaviva.twitter_favorites.Main</mainClass>
+						</transformer>
+					</transformers>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 
 			<plugin>

@@ -4,6 +4,7 @@ import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.Browser.NewContextOptions;
 import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.BrowserType.LaunchOptions;
+import com.microsoft.playwright.ElementHandle;
 import com.microsoft.playwright.ElementHandle.ScreenshotOptions;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Page.AddStyleTagOptions;
@@ -18,6 +19,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
@@ -30,14 +32,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -108,18 +108,17 @@ public class Main {
 
 		System.out.println("Initializing...");
 		//only download Chromium (& ffmpeg), not Firefox or WebKit, in order to save download time, download quota, and disk space
-		try (Playwright playwright = CustomPlaywrightImpl.create(Arrays.asList("chromium"))) {
+		try (Playwright playwright = CustomPlaywrightImpl.create("chromium")) {
 			final Path storageStatePath = new File(DATA_DIRECTORY, "storage.json").toPath();
 			final Browser loginBrowser = playwright.chromium().launch(new LaunchOptions().setHeadless(false));
 			final BrowserContext loginBrowserContext = loginBrowser.newContext(new NewContextOptions()
-			    .setDeviceScaleFactor(DPI_MULTIPLIER)
-			    .setStorageStatePath(Files.exists(storageStatePath) ? storageStatePath : null)); //crashes if storage file is not found
+			    .setStorageStatePath(Files.exists(storageStatePath) ? storageStatePath : null)); //setStorageStatePath crashes if storage file is not found
 
 			// start log-in session, interactively if needed, for protected tweets
 			try (Page page = loginBrowserContext.newPage()) {
 				page.navigate("https://twitter.com");
 				System.out.println("Waiting for user to log in to Twitter...");
-				page.waitForURL("https://twitter.com/home", new WaitForURLOptions().setTimeout(ONE_DAY_IN_MILLIS));
+				page.waitForURL("https://twitter.com/home", new WaitForURLOptions().setTimeout(ONE_DAY_IN_MILLIS)); // give the user enough time to log in
 
 				// Set page theme to Lights Out (black background) for protected tweets
 				page.keyboard().press("g");
@@ -179,7 +178,8 @@ public class Main {
 
 					System.out.println("Loading tweet " + tweetId + "...");
 					try (Page page = tweetBrowserContext.newPage()) {
-						page.navigate(isProtected ? tweetUrl : embeddedTweetUrl);
+						final String pageUrl = isProtected ? tweetUrl : embeddedTweetUrl;
+						page.navigate(pageUrl);
 
 						page.addStyleTag(new AddStyleTagOptions().setContent(isProtected ? customProtectedStyle : customEmbeddedStyle));
 						page.waitForLoadState(isProtected ? LoadState.LOAD : LoadState.NETWORKIDLE); //network idle takes like 60 seconds to happen for logged-in twitter webapp pages, maybe an open websocket?
@@ -190,11 +190,15 @@ public class Main {
 
 						final String screenshotSelector = isProtected
 						    ? "div[style *= 'position: absolute;']:has(div > div > article a[href='https://help.twitter.com/using-twitter/how-to-tweet#source-labels'])"
-						    : "#app > div > div > div + div";
-						final byte[] screenshotBytes = page.querySelector(screenshotSelector)
-						    .screenshot(new ScreenshotOptions()
-						        .setQuality(80)
-						        .setType(ScreenshotType.JPEG));
+						    : "//article/..";
+						final ElementHandle screenshotEl = page.querySelector(screenshotSelector);
+						if (screenshotEl == null) {
+							throw new RuntimeException("Failed to find element on page " + pageUrl + " with selector " + screenshotSelector);
+						}
+
+						final byte[] screenshotBytes = screenshotEl.screenshot(new ScreenshotOptions()
+						    .setQuality(80)
+						    .setType(ScreenshotType.JPEG));
 
 						final ByteSource byteSource = new ByteSourceArray(screenshotBytes);
 
@@ -242,7 +246,15 @@ public class Main {
 	}
 
 	private static String readResourceFileAsString(final String filePath) throws IOException, URISyntaxException {
-		return new String(Files.readAllBytes(Paths.get(Main.class.getResource(filePath).toURI())), StandardCharsets.UTF_8);
+		try (InputStream inputStream = Main.class.getResource(filePath).openStream();
+		    ByteArrayOutputStream result = new ByteArrayOutputStream()) {
+
+			final byte[] buffer = new byte[1024];
+			for (int length; (length = inputStream.read(buffer)) != -1;) {
+				result.write(buffer, 0, length);
+			}
+			return result.toString(StandardCharsets.UTF_8);
+		}
 	}
 
 	private static String normalizeCharacterSet(final String input, final Charset outputCharacterSet) {

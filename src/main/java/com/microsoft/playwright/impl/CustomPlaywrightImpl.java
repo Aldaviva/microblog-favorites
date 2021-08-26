@@ -6,6 +6,7 @@ import com.microsoft.playwright.PlaywrightException;
 import com.microsoft.playwright.Selectors;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -17,6 +18,10 @@ public class CustomPlaywrightImpl implements Playwright {
 
 	public static CustomPlaywrightImpl create() {
 		return create(null, null);
+	}
+
+	public static CustomPlaywrightImpl create(final String... browsersToInstall) {
+		return create(Arrays.asList(browsersToInstall), null);
 	}
 
 	public static CustomPlaywrightImpl create(final Collection<String> browsersToInstall) {

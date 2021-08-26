@@ -6,3 +6,4 @@ target/
 storage.json
 TwitterConfigurationFactory.java
 Twitter API client libraries.xlsx
+dependency-reduced-pom.xml

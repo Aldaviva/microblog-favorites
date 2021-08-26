@@ -25,3 +25,7 @@ article article div[role=presentation],
 article article div[role=presentation] > div:last-of-type { /* Faint circle */
 	border-radius: 0 !important;
 }
+
+article > div:last-child { /* Tweet your reply button */
+	display: none;
+}

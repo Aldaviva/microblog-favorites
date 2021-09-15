@@ -1,5 +1,12 @@
 package com.aldaviva.twitter_favorites;
 
+import com.aldaviva.twitter_favorites.nixplay.JerseyNixplayClient;
+import com.aldaviva.twitter_favorites.nixplay.NixplayClient;
+import com.aldaviva.twitter_favorites.nixplay.data.Album;
+import com.aldaviva.twitter_favorites.nixplay.data.FrameStatus;
+import com.aldaviva.twitter_favorites.nixplay.data.Photo;
+import com.aldaviva.twitter_favorites.nixplay.data.Playlist;
+
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.Browser.NewContextOptions;
 import com.microsoft.playwright.BrowserContext;
@@ -69,7 +76,7 @@ public class Main {
 
 	private static final int DPI_MULTIPLIER = 3;
 	private static final int MAX_TWEETS_PER_PAGE = 200;
-	private static final int MAX_SCREENSHOTS_PER_DIRECTORY = 2000; //Nixplay album and playlist limit
+	private static final int MAX_SCREENSHOTS_PER_PLAYLIST = 2000; //Nixplay playlist limit
 	private static final int ONE_DAY_IN_MILLIS = 24 * 60 * 60 * 1000;
 	private static final ZoneId MY_TIME_ZONE = ZoneId.of("America/Los_Angeles");
 	private static final DateTimeFormatter EXIF_DATE_FORMATTER = DateTimeFormatter.ofPattern("uuuu:MM:dd HH:mm:ss", Locale.US).withZone(MY_TIME_ZONE);
@@ -77,6 +84,9 @@ public class Main {
 	private static final Pattern FILE_BASENAME_EXTENSION_SPLITTER = Pattern.compile("\\.(?=[^\\.]+$)");
 	private static final FilenameFilter SCREENSHOT_FILE_FILTER = new ScreenshotFileFilter();
 	private static final File DATA_DIRECTORY = new File(System.getenv("USERPROFILE"), "Documents/Twitter favorites");
+	private static final String NIXPLAY_ALBUM_PREFIX = "Favorite Tweets ";
+	//	private static final Pattern NIXPLAY_ALBUM_PATTERN = Pattern.compile("^Favorite Tweets (\\d+)$");
+	private static final ExifRewriter EXIF_REWRITER = new ExifRewriter();
 
 	public static void main(final String[] args) throws IOException, URISyntaxException {
 		final File screenshotsDirectory = new File(DATA_DIRECTORY, "screenshots");
@@ -106,7 +116,18 @@ public class Main {
 			}
 		});
 
-		System.out.println("Initializing...");
+		int nixplayAlbumNumber = 0;
+		Album nixplayAlbum = null;
+		Playlist nixplayPlaylist = null;
+
+		System.out.println("Logging into Nixplay...");
+		final NixplayClient nixplay = new JerseyNixplayClient();
+		nixplay.signIn(ConfigurationFactory.createNixplayCredentials());
+		final List<Album> nixplayAlbums = nixplay.listAlbums();
+		final List<Playlist> nixplayPlaylists = nixplay.listPlaylists();
+		final List<FrameStatus> nixplayFrames = nixplay.listFrameStatuses().frames;
+
+		System.out.println("Initializing browser...");
 		//only download Chromium (& ffmpeg), not Firefox or WebKit, in order to save download time, download quota, and disk space
 		try (Playwright playwright = CustomPlaywrightImpl.create("chromium")) {
 			final Path storageStatePath = new File(DATA_DIRECTORY, "storage.json").toPath();
@@ -139,7 +160,7 @@ public class Main {
 			final String customEmbeddedStyle = readResourceFileAsString("/styles/embedded-tweet.css");
 			final String customProtectedStyle = readResourceFileAsString("/styles/protected-tweet.css");
 
-			final ConfigurationBuilder config = TwitterConfigurationFactory.createTwitterConfigurationBuilder();
+			final ConfigurationBuilder config = ConfigurationFactory.createTwitterConfigurationBuilder();
 			config.setTrimUserEnabled(false);
 			config.setTweetModeExtended(true);
 			final Twitter twitter = new TwitterFactory(config.build()).getInstance();
@@ -167,7 +188,7 @@ public class Main {
 						continue;
 					}
 
-					while (subdirectoryId == 0 || subdirectoryChildCount >= MAX_SCREENSHOTS_PER_DIRECTORY) {
+					while (subdirectoryId == 0 || subdirectoryChildCount >= MAX_SCREENSHOTS_PER_PLAYLIST) {
 						subdirectoryId++;
 						subdirectory = new File(screenshotsDirectory, String.valueOf(subdirectoryId));
 						subdirectory.mkdirs();
@@ -175,6 +196,33 @@ public class Main {
 					}
 
 					final File screenshotFile = new File(subdirectory, tweetId + ".jpg");
+
+					while (nixplayAlbum == null || nixplayAlbum.photoCount >= MAX_SCREENSHOTS_PER_PLAYLIST) {
+						nixplayAlbumNumber++;
+						final String albumTitle = NIXPLAY_ALBUM_PREFIX + nixplayAlbumNumber;
+
+						nixplayAlbum = nixplayAlbums.stream().filter(album -> albumTitle.equals(album.title)).findAny().orElseGet(() -> {
+							final Album album = nixplay.createAlbum(albumTitle);
+							nixplayAlbums.add(album);
+							System.out.println("Created Nixplay album " + albumTitle);
+							return album;
+						});
+						nixplayPlaylist = null;
+					}
+
+					if (nixplayPlaylist == null) {
+						final String albumTitle = nixplayAlbum.title;
+						nixplayPlaylist = nixplayPlaylists.stream().filter(playlist -> albumTitle.equals(playlist.name)).findAny()
+						    .orElseGet(() -> {
+							    final Playlist playlist = nixplay.createPlaylist(albumTitle);
+							    System.out.println("Created Nixplay playlist " + albumTitle);
+							    for (final FrameStatus frame : nixplayFrames) {
+								    nixplay.enablePlaylistOnFrame(playlist, frame);
+								    System.out.println("Enabled Nixplay playlist on frame " + frame.framePk);
+							    }
+							    return playlist;
+						    });
+					}
 
 					System.out.println("Loading tweet " + tweetId + "...");
 					try (Page page = tweetBrowserContext.newPage()) {
@@ -225,10 +273,21 @@ public class Main {
 
 						try (FileOutputStream fileOutputStream = new FileOutputStream(screenshotFile);
 						    OutputStream bufferedFileOutputStream = new BufferedOutputStream(fileOutputStream)) {
-							new ExifRewriter().updateExifMetadataLossless(bytesWithIptc.toByteArray(), bufferedFileOutputStream, exifOutputSet);
+
+							final ByteArrayOutputStream exifFileStream = new ByteArrayOutputStream();
+							EXIF_REWRITER.updateExifMetadataLossless(bytesWithIptc.toByteArray(), exifFileStream, exifOutputSet);
+
+							final byte[] exifFile = exifFileStream.toByteArray();
+							bufferedFileOutputStream.write(exifFile);
+							System.out.println("Saved tweet " + tweetId);
+
+							final Photo nixplayPhoto = nixplay.uploadPhoto(exifFile, screenshotFile.getName(), nixplayAlbum);
+							nixplay.appendPhotosToPlaylist(nixplayPlaylist, nixplayPhoto);
+							System.out.println("Uploaded tweet " + tweetId + " to Nixplay album and playlist " + nixplayAlbum.title);
+
+							nixplayAlbum.photoCount++;
 							subdirectoryChildCount++;
 							previouslySavedTweetIds.add(tweetId);
-							System.out.println("Saved tweet " + tweetId);
 						}
 
 					} catch (final ImageReadException | ImageWriteException e) {
@@ -238,6 +297,8 @@ public class Main {
 			}
 		} catch (final TwitterException e1) {
 			throw new RuntimeException(e1);
+		} finally {
+			nixplay.close();
 		}
 	}
 

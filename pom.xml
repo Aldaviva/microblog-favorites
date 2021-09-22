@@ -6,7 +6,8 @@
 	<artifactId>twitter-favorites</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Twitter Favorites</name>
-	<description>Save favorited tweets as images with metadata</description>
+	<description>Save favorited tweets as images with metadata
+	</description>
 
 	<inceptionYear>2021</inceptionYear>
 	<developers>
@@ -30,6 +31,8 @@
 		<commons-imaging.version>1.0-alpha2</commons-imaging.version>
 		<twitter4j.version>4.0.6</twitter4j.version>
 		<jersey.version>2.34</jersey.version>
+		<logback.version>1.2.6</logback.version>
+		<slf4j.version>1.7.32</slf4j.version>
 	</properties>
 
 	<dependencies>
@@ -61,6 +64,11 @@
 			<version>${jersey.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>org.glassfish.jersey.inject</groupId>
+			<artifactId>jersey-hk2</artifactId>
+			<version>${jersey.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-json-jackson</artifactId>
 			<version>${jersey.version}</version>
@@ -69,6 +77,23 @@
 			<groupId>org.glassfish.jersey.media</groupId>
 			<artifactId>jersey-media-multipart</artifactId>
 			<version>${jersey.version}</version>
+		</dependency>
+
+		<!-- Logging -->
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>${logback.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jul-to-slf4j</artifactId>
+			<version>${slf4j.version}</version>
 		</dependency>
 	</dependencies>
 

@@ -2,6 +2,7 @@ package com.aldaviva.twitter_favorites.nixplay.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
+import java.util.Map;
 
 public class Playlist {
 
@@ -18,7 +19,7 @@ public class Playlist {
 	@JsonProperty("on_frames") public List<Object> onFrames;
 	@JsonProperty("on_scheduled_frames") public List<Object> onScheduledFrames;
 	@JsonProperty("type") public String type;
-	@JsonProperty("sharing") public String sharing;
+	@JsonProperty("sharing") public Map<String, Object> sharing;
 	@JsonProperty("last_updated_date") public String lastUpdatedDate;
 	@JsonProperty("created_date") public String createdDate;
 

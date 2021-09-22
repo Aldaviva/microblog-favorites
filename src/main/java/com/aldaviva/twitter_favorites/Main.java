@@ -64,6 +64,7 @@ import org.apache.commons.imaging.formats.tiff.constants.ExifTagConstants;
 import org.apache.commons.imaging.formats.tiff.constants.TiffTagConstants;
 import org.apache.commons.imaging.formats.tiff.write.TiffOutputDirectory;
 import org.apache.commons.imaging.formats.tiff.write.TiffOutputSet;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 import twitter4j.Paging;
 import twitter4j.ResponseList;
 import twitter4j.Status;
@@ -76,7 +77,7 @@ public class Main {
 
 	private static final int DPI_MULTIPLIER = 3;
 	private static final int MAX_TWEETS_PER_PAGE = 200;
-	private static final int MAX_SCREENSHOTS_PER_PLAYLIST = 2000; //Nixplay playlist limit
+	private static final int MAX_PHOTOS_PER_PLAYLIST = 2000; //Nixplay playlist limit
 	private static final int ONE_DAY_IN_MILLIS = 24 * 60 * 60 * 1000;
 	private static final ZoneId MY_TIME_ZONE = ZoneId.of("America/Los_Angeles");
 	private static final DateTimeFormatter EXIF_DATE_FORMATTER = DateTimeFormatter.ofPattern("uuuu:MM:dd HH:mm:ss", Locale.US).withZone(MY_TIME_ZONE);
@@ -85,10 +86,12 @@ public class Main {
 	private static final FilenameFilter SCREENSHOT_FILE_FILTER = new ScreenshotFileFilter();
 	private static final File DATA_DIRECTORY = new File(System.getenv("USERPROFILE"), "Documents/Twitter favorites");
 	private static final String NIXPLAY_ALBUM_PREFIX = "Favorite Tweets ";
-	//	private static final Pattern NIXPLAY_ALBUM_PATTERN = Pattern.compile("^Favorite Tweets (\\d+)$");
 	private static final ExifRewriter EXIF_REWRITER = new ExifRewriter();
 
 	public static void main(final String[] args) throws IOException, URISyntaxException {
+		SLF4JBridgeHandler.removeHandlersForRootLogger();
+		SLF4JBridgeHandler.install();
+
 		final File screenshotsDirectory = new File(DATA_DIRECTORY, "screenshots");
 		screenshotsDirectory.mkdirs();
 
@@ -188,7 +191,7 @@ public class Main {
 						continue;
 					}
 
-					while (subdirectoryId == 0 || subdirectoryChildCount >= MAX_SCREENSHOTS_PER_PLAYLIST) {
+					while (subdirectoryId == 0 || subdirectoryChildCount >= MAX_PHOTOS_PER_PLAYLIST) {
 						subdirectoryId++;
 						subdirectory = new File(screenshotsDirectory, String.valueOf(subdirectoryId));
 						subdirectory.mkdirs();
@@ -197,7 +200,7 @@ public class Main {
 
 					final File screenshotFile = new File(subdirectory, tweetId + ".jpg");
 
-					while (nixplayAlbum == null || nixplayAlbum.photoCount >= MAX_SCREENSHOTS_PER_PLAYLIST) {
+					while (nixplayAlbum == null || nixplayAlbum.photoCount >= MAX_PHOTOS_PER_PLAYLIST) {
 						nixplayAlbumNumber++;
 						final String albumTitle = NIXPLAY_ALBUM_PREFIX + nixplayAlbumNumber;
 
@@ -271,24 +274,23 @@ public class Main {
 						exifFolder.add(ExifTagConstants.EXIF_TAG_DATE_TIME_ORIGINAL, EXIF_DATE_FORMATTER.format(tweetDate));
 						exifFolder.add(ExifTagConstants.EXIF_TAG_DATE_TIME_DIGITIZED, EXIF_DATE_FORMATTER.format(Instant.now()));
 
+						final ByteArrayOutputStream exifFileStream = new ByteArrayOutputStream();
+						EXIF_REWRITER.updateExifMetadataLossless(bytesWithIptc.toByteArray(), exifFileStream, exifOutputSet);
+						final byte[] exifFile = exifFileStream.toByteArray();
+
+						final Photo nixplayPhoto = nixplay.uploadPhoto(exifFile, screenshotFile.getName(), nixplayAlbum);
+						nixplay.appendPhotosToPlaylist(nixplayPlaylist, nixplayPhoto);
+						System.out.println("Uploaded tweet " + tweetId + " to Nixplay album and playlist " + nixplayAlbum.title);
+						nixplayAlbum.photoCount++;
+
 						try (FileOutputStream fileOutputStream = new FileOutputStream(screenshotFile);
 						    OutputStream bufferedFileOutputStream = new BufferedOutputStream(fileOutputStream)) {
-
-							final ByteArrayOutputStream exifFileStream = new ByteArrayOutputStream();
-							EXIF_REWRITER.updateExifMetadataLossless(bytesWithIptc.toByteArray(), exifFileStream, exifOutputSet);
-
-							final byte[] exifFile = exifFileStream.toByteArray();
 							bufferedFileOutputStream.write(exifFile);
 							System.out.println("Saved tweet " + tweetId);
-
-							final Photo nixplayPhoto = nixplay.uploadPhoto(exifFile, screenshotFile.getName(), nixplayAlbum);
-							nixplay.appendPhotosToPlaylist(nixplayPlaylist, nixplayPhoto);
-							System.out.println("Uploaded tweet " + tweetId + " to Nixplay album and playlist " + nixplayAlbum.title);
-
-							nixplayAlbum.photoCount++;
-							subdirectoryChildCount++;
-							previouslySavedTweetIds.add(tweetId);
 						}
+
+						subdirectoryChildCount++;
+						previouslySavedTweetIds.add(tweetId);
 
 					} catch (final ImageReadException | ImageWriteException e) {
 						throw new RuntimeException(e);

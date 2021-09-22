@@ -37,6 +37,12 @@ public interface NixplayClient extends Closeable, AutoCloseable {
 
 	Photo uploadPhoto(InputStream photoStream, String filename, long length, Album destinationAlbum);
 
+	/**
+	 * List photos in an album.
+	 * @param album The album in which to find photos.
+	 * @param page The page number to get photos from. The smallest possible value is {@code 1}, which contains the photos <b><i>most recently</i></b> added to the album.
+	 * @param limit The maximum number of photos to return. There is no maximum value for this parameter.
+	 */
 	List<Photo> getPhotosFromAlbum(Album album, int page, int limit);
 
 	void appendPhotosToPlaylist(Playlist playlist, Photo... photos);

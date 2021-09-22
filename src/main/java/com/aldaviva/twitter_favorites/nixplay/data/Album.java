@@ -2,6 +2,7 @@ package com.aldaviva.twitter_favorites.nixplay.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
+import java.util.Map;
 
 public class Album {
 
@@ -15,7 +16,7 @@ public class Album {
 	@JsonProperty("dateCreated") public String dateCreated;
 	@JsonProperty("allow_upload") public boolean allowUpload;
 	@JsonProperty("allow_delete") public boolean allowDelete;
-	@JsonProperty("thumbs") public List<String> thumbs;
+	@JsonProperty("thumbs") public List<Map<String, Object>> thumbs;
 	@JsonProperty("published") public boolean published;
 	@JsonProperty("id") public long id;
 	@JsonProperty("allow_delete_pictures") public boolean allowDeletePictures;

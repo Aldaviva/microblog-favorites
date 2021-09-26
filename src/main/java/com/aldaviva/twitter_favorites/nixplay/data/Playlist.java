@@ -22,5 +22,6 @@ public class Playlist {
 	@JsonProperty("sharing") public Map<String, Object> sharing;
 	@JsonProperty("last_updated_date") public String lastUpdatedDate;
 	@JsonProperty("created_date") public String createdDate;
+	@JsonProperty("member_last_updated_date") public String memberLastUpdatedDate;
 
 }

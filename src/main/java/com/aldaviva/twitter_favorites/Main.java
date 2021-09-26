@@ -51,6 +51,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.imaging.ImageReadException;
 import org.apache.commons.imaging.ImageWriteException;
 import org.apache.commons.imaging.common.bytesource.ByteSource;
@@ -88,9 +94,26 @@ public class Main {
 	private static final String NIXPLAY_ALBUM_PREFIX = "Favorite Tweets ";
 	private static final ExifRewriter EXIF_REWRITER = new ExifRewriter();
 
+	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(Main.class);
+
 	public static void main(final String[] args) throws IOException, URISyntaxException {
 		SLF4JBridgeHandler.removeHandlersForRootLogger();
 		SLF4JBridgeHandler.install();
+
+		final Options cliOptions = new Options();
+		final Option quietMode = new Option("q", "quiet", false, "Hide brief browser window when starting, even if Twitter is logged out");
+		cliOptions.addOption(quietMode);
+
+		final CommandLineParser cliParser = new DefaultParser();
+		CommandLine cliArguments;
+		try {
+			cliArguments = cliParser.parse(cliOptions, args);
+		} catch (final ParseException e) {
+			System.err.println("Failed to parse command-line arguments: " + e.getMessage());
+			return;
+		}
+
+		final boolean isQuietMode = cliArguments.hasOption(quietMode.getOpt());
 
 		final File screenshotsDirectory = new File(DATA_DIRECTORY, "screenshots");
 		screenshotsDirectory.mkdirs();
@@ -123,26 +146,27 @@ public class Main {
 		Album nixplayAlbum = null;
 		Playlist nixplayPlaylist = null;
 
-		System.out.println("Logging into Nixplay...");
+		LOGGER.info("Logging into Nixplay...");
 		final NixplayClient nixplay = new JerseyNixplayClient();
 		nixplay.signIn(ConfigurationFactory.createNixplayCredentials());
 		final List<Album> nixplayAlbums = nixplay.listAlbums();
 		final List<Playlist> nixplayPlaylists = nixplay.listPlaylists();
 		final List<FrameStatus> nixplayFrames = nixplay.listFrameStatuses().frames;
 
-		System.out.println("Initializing browser...");
+		LOGGER.info("Initializing browser...");
 		//only download Chromium (& ffmpeg), not Firefox or WebKit, in order to save download time, download quota, and disk space
 		try (Playwright playwright = CustomPlaywrightImpl.create("chromium")) {
 			final Path storageStatePath = new File(DATA_DIRECTORY, "storage.json").toPath();
-			final Browser loginBrowser = playwright.chromium().launch(new LaunchOptions().setHeadless(false));
+			final Browser loginBrowser = playwright.chromium().launch(new LaunchOptions().setHeadless(isQuietMode));
 			final BrowserContext loginBrowserContext = loginBrowser.newContext(new NewContextOptions()
 			    .setStorageStatePath(Files.exists(storageStatePath) ? storageStatePath : null)); //setStorageStatePath crashes if storage file is not found
 
 			// start log-in session, interactively if needed, for protected tweets
 			try (Page page = loginBrowserContext.newPage()) {
 				page.navigate("https://twitter.com");
-				System.out.println("Waiting for user to log in to Twitter...");
-				page.waitForURL("https://twitter.com/home", new WaitForURLOptions().setTimeout(ONE_DAY_IN_MILLIS)); // give the user enough time to log in
+				LOGGER.info("Waiting for user to log in to Twitter...");
+				final double loginTimeoutMs = isQuietMode ? 20 * 1000 : ONE_DAY_IN_MILLIS;
+				page.waitForURL("https://twitter.com/home", new WaitForURLOptions().setTimeout(loginTimeoutMs)); // give the user enough time to log in
 
 				// Set page theme to Lights Out (black background) for protected tweets
 				page.keyboard().press("g");
@@ -207,7 +231,7 @@ public class Main {
 						nixplayAlbum = nixplayAlbums.stream().filter(album -> albumTitle.equals(album.title)).findAny().orElseGet(() -> {
 							final Album album = nixplay.createAlbum(albumTitle);
 							nixplayAlbums.add(album);
-							System.out.println("Created Nixplay album " + albumTitle);
+							LOGGER.info("Created Nixplay album " + albumTitle);
 							return album;
 						});
 						nixplayPlaylist = null;
@@ -218,16 +242,16 @@ public class Main {
 						nixplayPlaylist = nixplayPlaylists.stream().filter(playlist -> albumTitle.equals(playlist.name)).findAny()
 						    .orElseGet(() -> {
 							    final Playlist playlist = nixplay.createPlaylist(albumTitle);
-							    System.out.println("Created Nixplay playlist " + albumTitle);
+							    LOGGER.info("Created Nixplay playlist " + albumTitle);
 							    for (final FrameStatus frame : nixplayFrames) {
 								    nixplay.enablePlaylistOnFrame(playlist, frame);
-								    System.out.println("Enabled Nixplay playlist on frame " + frame.framePk);
+								    LOGGER.info("Enabled Nixplay playlist on frame " + frame.framePk);
 							    }
 							    return playlist;
 						    });
 					}
 
-					System.out.println("Loading tweet " + tweetId + "...");
+					LOGGER.debug("Loading tweet " + tweetId + "...");
 					try (Page page = tweetBrowserContext.newPage()) {
 						final String pageUrl = isProtected ? tweetUrl : embeddedTweetUrl;
 						page.navigate(pageUrl);
@@ -280,13 +304,13 @@ public class Main {
 
 						final Photo nixplayPhoto = nixplay.uploadPhoto(exifFile, screenshotFile.getName(), nixplayAlbum);
 						nixplay.appendPhotosToPlaylist(nixplayPlaylist, nixplayPhoto);
-						System.out.println("Uploaded tweet " + tweetId + " to Nixplay album and playlist " + nixplayAlbum.title);
+						LOGGER.debug("Uploaded tweet " + tweetId + " to Nixplay album and playlist " + nixplayAlbum.title);
 						nixplayAlbum.photoCount++;
 
 						try (FileOutputStream fileOutputStream = new FileOutputStream(screenshotFile);
 						    OutputStream bufferedFileOutputStream = new BufferedOutputStream(fileOutputStream)) {
 							bufferedFileOutputStream.write(exifFile);
-							System.out.println("Saved tweet " + tweetId);
+							LOGGER.info("Saved tweet " + tweetId);
 						}
 
 						subdirectoryChildCount++;

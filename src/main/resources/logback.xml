@@ -6,11 +6,11 @@
         </encoder>
     </appender>
 
-    <root level="DEBUG">
+    <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>
 
-    <logger name="http" level="TRACE"/>
-    <logger name="com.aldaviva" level="DEBUG"/>
+    <logger name="http" level="INFO"/>
+    <logger name="com.aldaviva" level="INFO"/>
 
 </configuration>

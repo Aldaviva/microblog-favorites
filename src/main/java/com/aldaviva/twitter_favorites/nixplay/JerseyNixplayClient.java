@@ -17,12 +17,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.PasswordAuthentication;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.ws.rs.HttpMethod;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.ClientRequestContext;
@@ -53,6 +57,7 @@ public class JerseyNixplayClient implements NixplayClient {
 
 	private static final URI API_BASE_URI = URI.create("https://api.nixplay.com/");
 	private static final URI UPLOAD_MONITOR_BASE_URI = URI.create("https://upload-monitor.nixplay.com/");
+	private static final URI EMPTY_URI = URI.create("");
 	private static final String SESSION_ID_COOKIE_NAME = "prod.session.id";
 	private static final String CSRF_TOKEN_COOKIE_NAME = "prod.csrftoken";
 	private static final String CSRF_TOKEN_HEADER_NAME = "X-CSRFToken";
@@ -107,15 +112,21 @@ public class JerseyNixplayClient implements NixplayClient {
 
 	protected class SessionIdFilter implements ClientRequestFilter {
 
+		private final Set<String> verbsWithSideEffects = new HashSet<>(Arrays.asList(HttpMethod.DELETE, HttpMethod.PATCH, HttpMethod.POST, HttpMethod.PUT));
+
 		@Override
 		public void filter(final ClientRequestContext requestContext) throws IOException {
-			final ClientRequest clientRequest = (ClientRequest) requestContext;
+			final ClientRequest request = (ClientRequest) requestContext;
+			if (isSubUri(API_BASE_URI, requestContext.getUri())) {
+				if (sessionId != null) {
+					request.cookie(new Cookie(SESSION_ID_COOKIE_NAME, sessionId));
+				}
 
-			if (sessionId != null) {
-				clientRequest.cookie(new Cookie(SESSION_ID_COOKIE_NAME, sessionId));
+				if (csrfToken != null && verbsWithSideEffects.contains(requestContext.getMethod())) {
+					request.cookie(new Cookie(CSRF_TOKEN_COOKIE_NAME, csrfToken));
+					request.getHeaders().putSingle(CSRF_TOKEN_HEADER_NAME, csrfToken);
+				}
 			}
-
-			// Don't sent CSRF cookie with every request, since it causes the album list method to redirect somewhere else
 		}
 	}
 
@@ -230,14 +241,11 @@ public class JerseyNixplayClient implements NixplayClient {
 		}
 
 		LOGGER.debug("Appending {} photos to playlist {}", photos.length, playlist.name);
-		try (Response response = target()
+		target()
 		    .path("/v3/playlists/{playlistId}/items")
 		    .resolveTemplate("playlistId", playlist.id)
 		    .request()
-		    .cookie(new Cookie(CSRF_TOKEN_COOKIE_NAME, csrfToken))
-		    //		    .header(CSRF_TOKEN_HEADER_NAME, csrfToken)
-		    .post(Entity.json(requestBody))) {
-		}
+		    .post(Entity.json(requestBody), JsonNode.class);
 	}
 
 	@Override
@@ -255,12 +263,11 @@ public class JerseyNixplayClient implements NixplayClient {
 		    Collections.singletonList(Collections.singletonMap("playlistId", playlist.id)));
 
 		LOGGER.debug("Enabling playlist {} on frame {}", playlist.name, frame.framePk);
-		try (Response response = target()
+		target()
 		    .path("v3/shared-frames/{framePk}/playlists")
 		    .resolveTemplate("framePk", frame.framePk)
 		    .request()
-		    .post(Entity.json(requestBody))) {
-		}
+		    .post(Entity.json(requestBody), JsonNode.class);
 	}
 
 	@Override
@@ -297,8 +304,6 @@ public class JerseyNixplayClient implements NixplayClient {
 
 				final ObjectNode uploadTokenResponse = target().path("v3/upload/receivers")
 				    .request()
-				    .cookie(new Cookie(CSRF_TOKEN_COOKIE_NAME, csrfToken))
-				    //				    .header(CSRF_TOKEN_HEADER_NAME, csrfToken)
 				    .post(Entity.form(uploadTokenForm), ObjectNode.class);
 
 				uploadToken = uploadTokenResponse.path("token").asText();
@@ -320,8 +325,6 @@ public class JerseyNixplayClient implements NixplayClient {
 		final JsonNode uploadIdResponse = target()
 		    .path("v3/photo/upload/")
 		    .request()
-		    .cookie(new Cookie(CSRF_TOKEN_COOKIE_NAME, csrfToken))
-		    //		    .header(CSRF_TOKEN_HEADER_NAME, csrfToken)
 		    .post(Entity.form(uploadIdForm), ObjectNode.class)
 		    .get("data");
 
@@ -352,8 +355,7 @@ public class JerseyNixplayClient implements NixplayClient {
 		}
 
 		LOGGER.debug("Waiting for {} to be processed by Nixplay", filename);
-		//wait for photo to process so it appears in albums. this request takes about 3 seconds.
-		final String uploadMonitorResponse = client.target(UPLOAD_MONITOR_BASE_URI)
+		client.target(UPLOAD_MONITOR_BASE_URI)
 		    .path("status")
 		    .queryParam("id", uploadMonitorId)
 		    .request()
@@ -389,4 +391,10 @@ public class JerseyNixplayClient implements NixplayClient {
 			client.close();
 		}
 	}
+
+	private static boolean isSubUri(final URI base, final URI subResource) {
+		final URI relativeUri = base.relativize(subResource);
+		return !relativeUri.isAbsolute() && !relativeUri.equals(EMPTY_URI);
+	}
+
 }

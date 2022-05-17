@@ -169,8 +169,7 @@ public class Main {
 				page.waitForURL("https://twitter.com/home", new WaitForURLOptions().setTimeout(loginTimeoutMs)); // give the user enough time to log in
 
 				// Set page theme to Lights Out (black background) for protected tweets
-				page.keyboard().press("g");
-				page.keyboard().press("d");
+				page.navigate("https://twitter.com/i/display"); // keyboard shortcuts broke, so use URL routing instead
 				page.click("input[type=radio][aria-label='Lights out']"); //use click instead of check, because check tries to read the checked attribute after writing, but twitter removes/detaches the element on click
 				page.keyboard().press("Escape");
 			}

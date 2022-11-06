@@ -5,8 +5,7 @@
 	<artifactId>twitter-favorites</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Twitter Favorites</name>
-	<description>Save favorited tweets as images with metadata
-	</description>
+	<description>Save favorited tweets as images with metadata</description>
 
 	<inceptionYear>2021</inceptionYear>
 	<developers>
@@ -27,11 +26,11 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<playwright.version>1.12.1</playwright.version>
-		<commons-imaging.version>1.0-alpha2</commons-imaging.version>
+		<commons-imaging.version>1.0-alpha3</commons-imaging.version>
 		<twitter4j.version>4.0.6</twitter4j.version>
-		<jersey.version>2.34</jersey.version>
-		<logback.version>1.2.6</logback.version>
-		<slf4j.version>1.7.32</slf4j.version>
+		<jersey.version>3.1.0</jersey.version>
+		<logback.version>1.4.4</logback.version>
+		<slf4j.version>2.0.3</slf4j.version>
 	</properties>
 
 	<dependencies>
@@ -99,7 +98,7 @@
 		<dependency>
 			<groupId>commons-cli</groupId>
 			<artifactId>commons-cli</artifactId>
-			<version>1.4</version>
+			<version>1.5.0</version>
 		</dependency>
 	</dependencies>
 
@@ -108,7 +107,7 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.8.1</version>
+				<version>3.10.1</version>
 				<inherited>true</inherited>
 				<configuration>
 					<source>1.8</source>
@@ -119,7 +118,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.2.4</version>
+				<version>3.4.1</version>
 				<configuration>
 					<transformers>
 						<transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
@@ -139,7 +138,7 @@
 
 			<plugin>
 				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>3.0.0</version>
+				<version>3.1.0</version>
 				<executions>
 					<execution>
 						<id>enforce-maven</id>
@@ -149,7 +148,7 @@
 						<configuration>
 							<rules>
 								<requireMavenVersion>
-									<version>3.1.1</version>
+									<version>3.2.5</version>
 								</requireMavenVersion>
 							</rules>
 						</configuration>

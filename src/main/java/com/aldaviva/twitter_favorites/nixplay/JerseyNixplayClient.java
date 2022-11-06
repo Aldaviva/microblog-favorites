@@ -12,6 +12,20 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.ws.rs.HttpMethod;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.ClientRequestContext;
+import jakarta.ws.rs.client.ClientRequestFilter;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.Configuration;
+import jakarta.ws.rs.core.Cookie;
+import jakarta.ws.rs.core.Form;
+import jakarta.ws.rs.core.GenericType;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.NewCookie;
+import jakarta.ws.rs.core.Response;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -26,20 +40,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.ws.rs.HttpMethod;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.ClientRequestContext;
-import javax.ws.rs.client.ClientRequestFilter;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Configuration;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.NewCookie;
-import javax.ws.rs.core.Response;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
@@ -119,11 +119,11 @@ public class JerseyNixplayClient implements NixplayClient {
 			final ClientRequest request = (ClientRequest) requestContext;
 			if (isSubUri(API_BASE_URI, requestContext.getUri())) {
 				if (sessionId != null) {
-					request.cookie(new Cookie(SESSION_ID_COOKIE_NAME, sessionId));
+					request.cookie(new Cookie.Builder(SESSION_ID_COOKIE_NAME).value(sessionId).build());
 				}
 
 				if (csrfToken != null && verbsWithSideEffects.contains(requestContext.getMethod())) {
-					request.cookie(new Cookie(CSRF_TOKEN_COOKIE_NAME, csrfToken));
+					request.cookie(new Cookie.Builder(CSRF_TOKEN_COOKIE_NAME).value(csrfToken).build());
 					request.getHeaders().putSingle(CSRF_TOKEN_HEADER_NAME, csrfToken);
 				}
 			}

@@ -1,7 +1,7 @@
 package com.aldaviva.twitter_favorites.http;
 
-import javax.inject.Singleton;
-import javax.ws.rs.core.Cookie;
+import jakarta.inject.Singleton;
+import jakarta.ws.rs.core.Cookie;
 import org.glassfish.jersey.client.internal.CustomHttpUrlConnector;
 import org.glassfish.jersey.internal.LocalizationMessages;
 import org.glassfish.jersey.message.internal.CookieProvider;

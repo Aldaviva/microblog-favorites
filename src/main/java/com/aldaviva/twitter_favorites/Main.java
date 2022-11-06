@@ -17,7 +17,9 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Page.AddStyleTagOptions;
 import com.microsoft.playwright.Page.WaitForURLOptions;
 import com.microsoft.playwright.Playwright;
-import com.microsoft.playwright.impl.CustomPlaywrightImpl;
+import com.microsoft.playwright.Playwright.CreateOptions;
+import com.microsoft.playwright.impl.PlaywrightImpl;
+import com.microsoft.playwright.impl.driver.jar.CustomDriver;
 import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.ScreenshotType;
 import java.io.BufferedOutputStream;
@@ -156,7 +158,8 @@ public class Main {
 
 		LOGGER.info("Initializing browser...");
 		//only download Chromium (& ffmpeg), not Firefox or WebKit, in order to save download time, download quota, and disk space
-		try (Playwright playwright = CustomPlaywrightImpl.create("chromium")) {
+		System.setProperty("playwright.driver.impl", CustomDriver.class.getName());
+		try (Playwright playwright = PlaywrightImpl.create(new CreateOptions().setEnv(Collections.singletonMap(CustomDriver.PLAYWRIGHT_BROWSERS_TO_INSTALL, "chromium")))) {
 			final Path storageStatePath = new File(DATA_DIRECTORY, "storage.json").toPath();
 			final Browser loginBrowser = playwright.chromium().launch(new LaunchOptions().setHeadless(isQuietMode));
 			final BrowserContext loginBrowserContext = loginBrowser.newContext(new NewContextOptions()

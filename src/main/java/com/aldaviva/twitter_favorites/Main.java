@@ -41,6 +41,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
@@ -81,16 +82,16 @@ import twitter4j.conf.ConfigurationBuilder;
 
 public class Main {
 
-	private static final int DPI_MULTIPLIER = 3;
+	private static final int SCREENSHOT_DPI_MULTIPLIER = 3;
 	private static final int MAX_TWEETS_PER_PAGE = 200;
 	private static final int MAX_PHOTOS_PER_PLAYLIST = 2000; //Nixplay playlist limit
-	private static final int ONE_DAY_IN_MILLIS = 24 * 60 * 60 * 1000;
+	private static final long ONE_DAY_IN_MILLIS = Duration.ofDays(1).toMillis();
 	private static final ZoneId MY_TIME_ZONE = ZoneId.of("America/Los_Angeles");
-	private static final DateTimeFormatter EXIF_DATE_FORMATTER = DateTimeFormatter.ofPattern("uuuu:MM:dd HH:mm:ss", Locale.US).withZone(MY_TIME_ZONE);
-	private static final DateTimeFormatter IPTC_DATE_FORMATTER = DateTimeFormatter.ofPattern("uuuu-MM-dd HH:mm:ss", Locale.US).withZone(MY_TIME_ZONE);
+	private static final DateTimeFormatter EXIF_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss", Locale.US).withZone(MY_TIME_ZONE);
+	private static final DateTimeFormatter IPTC_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.US).withZone(MY_TIME_ZONE);
 	private static final Pattern FILE_BASENAME_EXTENSION_SPLITTER = Pattern.compile("\\.(?=[^\\.]+$)");
 	private static final FilenameFilter SCREENSHOT_FILE_FILTER = new ScreenshotFileFilter();
-	private static final File DATA_DIRECTORY = new File(System.getenv("USERPROFILE"), "Documents/Twitter favorites");
+	private static final File DATA_DIRECTORY = new File("E:\\Backup\\Online services\\Twitter\\Favorites");
 	private static final String NIXPLAY_ALBUM_PREFIX = "Favorite Tweets ";
 	private static final ExifRewriter EXIF_REWRITER = new ExifRewriter();
 
@@ -179,7 +180,7 @@ public class Main {
 
 			final Browser tweetBrowser = playwright.chromium().launch(new LaunchOptions().setHeadless(true));
 			final BrowserContext tweetBrowserContext = tweetBrowser.newContext(new NewContextOptions()
-			    .setDeviceScaleFactor(DPI_MULTIPLIER)
+			    .setDeviceScaleFactor(SCREENSHOT_DPI_MULTIPLIER)
 			    .setViewportSize(1920, 1200) //tall enough for protected tweets to not get cut off, especially if they are replies to other long tweets that appear above them
 			    .setStorageStatePath(storageStatePath));
 

@@ -194,9 +194,11 @@ public class Main {
 			config.setTrimUserEnabled(false);
 			config.setTweetModeExtended(true);
 			final Twitter twitter = new TwitterFactory(config.build()).getInstance();
+			int remoteFavoritesListed = 0;
 
 			for (int pageNumber = 1;; pageNumber++) {
 				final ResponseList<Status> favorites = twitter.favorites().getFavorites(new Paging(pageNumber, MAX_TWEETS_PER_PAGE));
+				remoteFavoritesListed += favorites.size();
 				if (favorites.isEmpty()) {
 					// last page finished, no more favorites
 					break;
@@ -267,7 +269,7 @@ public class Main {
 						}
 
 						final String screenshotSelector = isProtected
-						    ? "div[style *= 'position: absolute;']:has(div > div > article a[href='https://help.twitter.com/using-twitter/how-to-tweet#source-labels'])"
+						    ? "div[style *= 'position: absolute;']:has(div > div > article div[aria-label=Bookmark])"
 						    : "//article/..";
 						final ElementHandle screenshotEl = page.querySelector(screenshotSelector);
 						if (screenshotEl == null) {
@@ -324,7 +326,9 @@ public class Main {
 					}
 				}
 			}
+			LOGGER.info("Done, checked {} favorites.", remoteFavoritesListed);
 		} catch (final TwitterException e1) {
+			LOGGER.error("Twitter exception", e1);
 			throw new RuntimeException(e1);
 		} finally {
 			nixplay.close();

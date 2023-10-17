@@ -1,20 +1,25 @@
-package com.aldaviva.twitter_favorites.nixplay;
+package com.aldaviva.twitter_favorites.services.nixplay;
 
-import com.aldaviva.twitter_favorites.nixplay.data.Album;
-import com.aldaviva.twitter_favorites.nixplay.data.FrameStatus;
-import com.aldaviva.twitter_favorites.nixplay.data.Photo;
-import com.aldaviva.twitter_favorites.nixplay.data.Playlist;
+import com.aldaviva.twitter_favorites.services.nixplay.data.Album;
+import com.aldaviva.twitter_favorites.services.nixplay.data.FrameStatus;
+import com.aldaviva.twitter_favorites.services.nixplay.data.Photo;
+import com.aldaviva.twitter_favorites.services.nixplay.data.Playlist;
 
-import java.io.Closeable;
 import java.io.File;
 import java.io.InputStream;
 import java.net.PasswordAuthentication;
 import java.util.List;
 
-public interface NixplayClient extends Closeable, AutoCloseable {
+public interface NixplayClient extends AutoCloseable {
 
+	/**
+	 * @return session ID
+	 */
 	String signIn(PasswordAuthentication credentials);
 
+	/**
+	 * @return session ID
+	 */
 	String signIn(String sessionId);
 
 	void signOut();

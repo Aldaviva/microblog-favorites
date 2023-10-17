@@ -1,12 +1,9 @@
-package com.aldaviva.twitter_favorites.nixplay;
+package com.aldaviva.twitter_favorites.services.nixplay;
 
-import com.aldaviva.twitter_favorites.http.CustomHttpUrlConnectorProvider;
-import com.aldaviva.twitter_favorites.http.JacksonConfig.CustomJacksonFeature;
-import com.aldaviva.twitter_favorites.http.JacksonConfig.CustomObjectMapperProvider;
-import com.aldaviva.twitter_favorites.nixplay.data.Album;
-import com.aldaviva.twitter_favorites.nixplay.data.FrameStatus;
-import com.aldaviva.twitter_favorites.nixplay.data.Photo;
-import com.aldaviva.twitter_favorites.nixplay.data.Playlist;
+import com.aldaviva.twitter_favorites.services.nixplay.data.Album;
+import com.aldaviva.twitter_favorites.services.nixplay.data.FrameStatus;
+import com.aldaviva.twitter_favorites.services.nixplay.data.Photo;
+import com.aldaviva.twitter_favorites.services.nixplay.data.Playlist;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -14,12 +11,10 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.ws.rs.HttpMethod;
 import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.Configuration;
 import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.Form;
 import jakarta.ws.rs.core.GenericType;
@@ -38,12 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.ClientRequest;
-import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.media.multipart.BodyPart;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataMultiPart;
@@ -71,31 +61,11 @@ public class JerseyNixplayClient implements NixplayClient {
 	private final Map<Long, String> albumToUploadTokenCache = new HashMap<>();
 	private final boolean closeClient;
 
-	public JerseyNixplayClient() {
-		this(ClientBuilder.newClient(createDefaultClientConfiguration()), true);
-	}
-
 	public JerseyNixplayClient(final Client client, final boolean closeClient) {
 		this.client = client
 		    .register(new SessionIdFilter())
 		    .register(MultiPartFeature.class);
 		this.closeClient = closeClient;
-	}
-
-	private static final Configuration createDefaultClientConfiguration() {
-		final ClientConfig clientConfig = new ClientConfig();
-		clientConfig.register(CustomObjectMapperProvider.class);
-		clientConfig.register(CustomJacksonFeature.class);
-		clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 5 * 1000);
-		clientConfig.property(ClientProperties.READ_TIMEOUT, 30 * 1000);
-		clientConfig.property(ClientProperties.FOLLOW_REDIRECTS, false);
-		clientConfig.connectorProvider(new CustomHttpUrlConnectorProvider());
-
-		final Logger httpLogger = Logger.getLogger("http");
-		httpLogger.setLevel(Level.ALL);
-		clientConfig.register(new LoggingFeature(httpLogger, LoggingFeature.Verbosity.PAYLOAD_ANY));
-
-		return clientConfig;
 	}
 
 	private void resetSessionState() {

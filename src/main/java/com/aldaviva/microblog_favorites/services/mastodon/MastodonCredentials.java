@@ -1,4 +1,4 @@
-package com.aldaviva.twitter_favorites.services.mastodon;
+package com.aldaviva.microblog_favorites.services.mastodon;
 
 import java.net.URI;
 

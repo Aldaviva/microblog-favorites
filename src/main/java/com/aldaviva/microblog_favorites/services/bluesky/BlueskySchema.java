@@ -1,4 +1,4 @@
-package com.aldaviva.twitter_favorites.services.bluesky;
+package com.aldaviva.microblog_favorites.services.bluesky;
 
 import jakarta.xml.bind.annotation.XmlRootElement;
 import java.net.URI;

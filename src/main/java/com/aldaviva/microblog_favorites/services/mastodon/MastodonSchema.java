@@ -1,4 +1,4 @@
-package com.aldaviva.twitter_favorites.services.mastodon;
+package com.aldaviva.microblog_favorites.services.mastodon;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.xml.bind.annotation.XmlRootElement;

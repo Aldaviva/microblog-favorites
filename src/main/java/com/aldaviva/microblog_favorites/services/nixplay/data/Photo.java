@@ -1,4 +1,4 @@
-package com.aldaviva.twitter_favorites.services.nixplay.data;
+package com.aldaviva.microblog_favorites.services.nixplay.data;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;

@@ -1,4 +1,4 @@
-package com.aldaviva.twitter_favorites.http;
+package com.aldaviva.microblog_favorites.http;
 
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;

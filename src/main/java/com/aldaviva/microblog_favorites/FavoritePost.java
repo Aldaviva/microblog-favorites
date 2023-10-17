@@ -1,4 +1,4 @@
-package com.aldaviva.twitter_favorites;
+package com.aldaviva.microblog_favorites;
 
 import java.net.URI;
 import java.time.Instant;

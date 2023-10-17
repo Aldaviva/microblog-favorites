@@ -1,9 +1,9 @@
-package com.aldaviva.twitter_favorites.services.nixplay;
+package com.aldaviva.microblog_favorites.services.nixplay;
 
-import com.aldaviva.twitter_favorites.services.nixplay.data.Album;
-import com.aldaviva.twitter_favorites.services.nixplay.data.FrameStatus;
-import com.aldaviva.twitter_favorites.services.nixplay.data.Photo;
-import com.aldaviva.twitter_favorites.services.nixplay.data.Playlist;
+import com.aldaviva.microblog_favorites.services.nixplay.data.Album;
+import com.aldaviva.microblog_favorites.services.nixplay.data.FrameStatus;
+import com.aldaviva.microblog_favorites.services.nixplay.data.Photo;
+import com.aldaviva.microblog_favorites.services.nixplay.data.Playlist;
 
 import java.io.File;
 import java.io.InputStream;

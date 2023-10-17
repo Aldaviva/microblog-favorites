@@ -1,11 +1,11 @@
-package com.aldaviva.twitter_favorites.services.bluesky;
+package com.aldaviva.microblog_favorites.services.bluesky;
 
-import com.aldaviva.twitter_favorites.ConfigurationFactory;
-import com.aldaviva.twitter_favorites.FavoriteDownloader;
-import com.aldaviva.twitter_favorites.FavoritePost;
-import com.aldaviva.twitter_favorites.services.bluesky.BlueskySchema.FavoritesListResponse;
-import com.aldaviva.twitter_favorites.services.bluesky.BlueskySchema.FeedItem;
-import com.aldaviva.twitter_favorites.services.bluesky.BlueskySchema.Post;
+import com.aldaviva.microblog_favorites.ConfigurationFactory;
+import com.aldaviva.microblog_favorites.FavoriteDownloader;
+import com.aldaviva.microblog_favorites.FavoritePost;
+import com.aldaviva.microblog_favorites.services.bluesky.BlueskySchema.FavoritesListResponse;
+import com.aldaviva.microblog_favorites.services.bluesky.BlueskySchema.FeedItem;
+import com.aldaviva.microblog_favorites.services.bluesky.BlueskySchema.Post;
 
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Page.WaitForSelectorOptions;

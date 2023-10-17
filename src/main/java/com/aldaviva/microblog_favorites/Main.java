@@ -1,14 +1,14 @@
-package com.aldaviva.twitter_favorites;
+package com.aldaviva.microblog_favorites;
 
-import com.aldaviva.twitter_favorites.http.CustomHttpUrlConnectorProvider;
-import com.aldaviva.twitter_favorites.http.JacksonConfig.CustomJacksonFeature;
-import com.aldaviva.twitter_favorites.http.JacksonConfig.CustomObjectMapperProvider;
-import com.aldaviva.twitter_favorites.services.bluesky.BlueskyDownloader;
-import com.aldaviva.twitter_favorites.services.mastodon.MastodonDownloader;
-import com.aldaviva.twitter_favorites.services.nixplay.NixplayUploader;
-import com.aldaviva.twitter_favorites.services.nixplay.data.Album;
-import com.aldaviva.twitter_favorites.services.nixplay.data.Playlist;
-import com.aldaviva.twitter_favorites.services.twitter.TwitterDownloader;
+import com.aldaviva.microblog_favorites.http.CustomHttpUrlConnectorProvider;
+import com.aldaviva.microblog_favorites.http.JacksonConfig.CustomJacksonFeature;
+import com.aldaviva.microblog_favorites.http.JacksonConfig.CustomObjectMapperProvider;
+import com.aldaviva.microblog_favorites.services.bluesky.BlueskyDownloader;
+import com.aldaviva.microblog_favorites.services.mastodon.MastodonDownloader;
+import com.aldaviva.microblog_favorites.services.nixplay.NixplayUploader;
+import com.aldaviva.microblog_favorites.services.nixplay.data.Album;
+import com.aldaviva.microblog_favorites.services.nixplay.data.Playlist;
+import com.aldaviva.microblog_favorites.services.twitter.TwitterDownloader;
 
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.Browser.NewContextOptions;

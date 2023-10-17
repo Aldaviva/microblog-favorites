@@ -1,4 +1,4 @@
-package com.aldaviva.twitter_favorites.http;
+package com.aldaviva.microblog_favorites.http;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;

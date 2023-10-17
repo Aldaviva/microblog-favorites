@@ -1,6 +1,6 @@
-package com.aldaviva.twitter_favorites;
+package com.aldaviva.microblog_favorites;
 
-import com.aldaviva.twitter_favorites.services.nixplay.NixplayUploader;
+import com.aldaviva.microblog_favorites.services.nixplay.NixplayUploader;
 
 import com.microsoft.playwright.ElementHandle;
 import com.microsoft.playwright.ElementHandle.ScreenshotOptions;

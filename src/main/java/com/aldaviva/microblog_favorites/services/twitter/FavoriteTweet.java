@@ -1,6 +1,6 @@
-package com.aldaviva.twitter_favorites.services.twitter;
+package com.aldaviva.microblog_favorites.services.twitter;
 
-import com.aldaviva.twitter_favorites.FavoritePost;
+import com.aldaviva.microblog_favorites.FavoritePost;
 
 import java.net.URI;
 

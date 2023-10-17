@@ -1,4 +1,4 @@
-package com.aldaviva.twitter_favorites.http;
+package com.aldaviva.microblog_favorites.http;
 
 import jakarta.inject.Singleton;
 import jakarta.ws.rs.core.Cookie;

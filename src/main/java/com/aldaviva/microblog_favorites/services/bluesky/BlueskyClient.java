@@ -1,7 +1,7 @@
-package com.aldaviva.twitter_favorites.services.bluesky;
+package com.aldaviva.microblog_favorites.services.bluesky;
 
-import com.aldaviva.twitter_favorites.http.BearerAuthenticationFilter;
-import com.aldaviva.twitter_favorites.services.bluesky.BlueskySchema.FavoritesListResponse;
+import com.aldaviva.microblog_favorites.http.BearerAuthenticationFilter;
+import com.aldaviva.microblog_favorites.services.bluesky.BlueskySchema.FavoritesListResponse;
 
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;

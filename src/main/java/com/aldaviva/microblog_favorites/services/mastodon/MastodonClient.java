@@ -1,7 +1,7 @@
-package com.aldaviva.twitter_favorites.services.mastodon;
+package com.aldaviva.microblog_favorites.services.mastodon;
 
-import com.aldaviva.twitter_favorites.http.BearerAuthenticationFilter;
-import com.aldaviva.twitter_favorites.services.mastodon.MastodonSchema.FavoritesListResponse;
+import com.aldaviva.microblog_favorites.http.BearerAuthenticationFilter;
+import com.aldaviva.microblog_favorites.services.mastodon.MastodonSchema.FavoritesListResponse;
 
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.WebTarget;

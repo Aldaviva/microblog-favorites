@@ -1,7 +1,7 @@
-package com.aldaviva.twitter_favorites.services.twitter;
+package com.aldaviva.microblog_favorites.services.twitter;
 
-import com.aldaviva.twitter_favorites.ConfigurationFactory;
-import com.aldaviva.twitter_favorites.FavoriteDownloader;
+import com.aldaviva.microblog_favorites.ConfigurationFactory;
+import com.aldaviva.microblog_favorites.FavoriteDownloader;
 
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Page.AddStyleTagOptions;

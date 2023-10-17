@@ -4,6 +4,7 @@ import com.aldaviva.twitter_favorites.http.CustomHttpUrlConnectorProvider;
 import com.aldaviva.twitter_favorites.http.JacksonConfig.CustomJacksonFeature;
 import com.aldaviva.twitter_favorites.http.JacksonConfig.CustomObjectMapperProvider;
 import com.aldaviva.twitter_favorites.services.bluesky.BlueskyDownloader;
+import com.aldaviva.twitter_favorites.services.mastodon.MastodonDownloader;
 import com.aldaviva.twitter_favorites.services.nixplay.NixplayUploader;
 import com.aldaviva.twitter_favorites.services.nixplay.data.Album;
 import com.aldaviva.twitter_favorites.services.nixplay.data.Playlist;
@@ -53,14 +54,16 @@ public class Main {
 		final Client httpClient = createHttpClient();
 		final TwitterDownloader twitter = new TwitterDownloader();
 		final BlueskyDownloader bluesky = new BlueskyDownloader(httpClient);
+		final MastodonDownloader mastodon = new MastodonDownloader(httpClient);
 		final NixplayUploader nixplay = new NixplayUploader(httpClient);
 
 		final Collection<FavoriteDownloader<? extends FavoritePost>> favoriteDownloaders = new ArrayList<>();
 		favoriteDownloaders.add(twitter);
 		favoriteDownloaders.add(bluesky);
+		favoriteDownloaders.add(mastodon);
 
 		LOGGER.info("Logging into Nixplay...");
-		nixplay.signIn(ConfigurationFactory.createNixplayCredentials());
+		nixplay.signIn(ConfigurationFactory.getNixplayCredentials());
 
 		LOGGER.info("Initializing browser...");
 		// Only download Chromium (& ffmpeg), not Firefox or WebKit, in order to save download time, download quota, and disk space

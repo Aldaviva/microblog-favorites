@@ -2,6 +2,7 @@ package com.aldaviva.twitter_favorites.http;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import jakarta.ws.rs.core.Configuration;
 import jakarta.ws.rs.core.Feature;
 import jakarta.ws.rs.core.FeatureContext;
@@ -106,6 +107,7 @@ public abstract class JacksonConfig {
 
 		public CustomObjectMapperProvider() {
 			objectMapper = new ObjectMapper();
+			objectMapper.registerModule(new JavaTimeModule());
 			objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 			objectMapper.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL);
 		}

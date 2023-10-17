@@ -7,6 +7,8 @@ import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Page.AddStyleTagOptions;
 import com.microsoft.playwright.Page.WaitForURLOptions;
 import com.microsoft.playwright.options.LoadState;
+import jakarta.ws.rs.core.UriBuilder;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import twitter4j.Paging;
@@ -24,6 +26,9 @@ public class TwitterDownloader extends FavoriteDownloader<FavoriteTweet> {
 	private static final int MAX_TWEETS_PER_PAGE = 200;
 	private static final String CUSTOM_EMBEDDED_STYLE = readResourceFileAsString("/styles/embedded-tweet.css");
 	private static final String CUSTOM_PROTECTED_STYLE = readResourceFileAsString("/styles/protected-tweet.css");
+	private static final UriBuilder POST_PAGE_URI = UriBuilder.fromUri("https://twitter.com/{author}/status/{tweetid}");
+	private static final UriBuilder POST_EMBEDDED_PAGE_URI = UriBuilder
+	    .fromUri("https://platform.twitter.com/embed/Tweet.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={tweetid}&lang=en&theme=dark");
 
 	private final Twitter twitterClient;
 
@@ -72,9 +77,8 @@ public class TwitterDownloader extends FavoriteDownloader<FavoriteTweet> {
 					favorite.setAuthorHandle(tweet.getUser().getScreenName());
 					favorite.setDate(tweet.getCreatedAt().toInstant());
 					favorite.setBody(tweet.getText());
-					favorite.setUrl("https://twitter.com/" + favorite.getAuthorHandle() + "/status/" + favorite.getId());
-					favorite.setEmbeddedUrl("https://platform.twitter.com/embed/Tweet.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id="
-					    + tweet.getId() + "&lang=en&theme=dark"); // refuses to load protected tweets
+					favorite.setUrl(POST_PAGE_URI.build(favorite.getAuthorHandle(), favorite.getId()));
+					favorite.setEmbeddedUrl(POST_EMBEDDED_PAGE_URI.build(favorite.getId())); // embedded page refuses to load protected tweets
 					favorite.setProtected(tweet.getUser().isProtected());
 
 					if (!previouslySavedPostIds.contains(favorite.getId())) {
@@ -105,7 +109,7 @@ public class TwitterDownloader extends FavoriteDownloader<FavoriteTweet> {
 	}
 
 	@Override
-	protected String getPageUrl(final FavoriteTweet favorite) {
+	protected URI getPageUrl(final FavoriteTweet favorite) {
 		return favorite.isProtected() ? favorite.getUrl() : favorite.getEmbeddedUrl();
 	}
 

@@ -1,5 +1,6 @@
 package com.aldaviva.twitter_favorites;
 
+import java.net.URI;
 import java.time.Instant;
 
 public class FavoritePost {
@@ -9,7 +10,7 @@ public class FavoritePost {
 	private String authorHandle;
 	private Instant date;
 	private String body;
-	private String url;
+	private URI url;
 
 	public String getPostTypeNoun(final boolean plural) {
 		return plural ? "posts" : "post";
@@ -55,11 +56,11 @@ public class FavoritePost {
 		this.body = body;
 	}
 
-	public String getUrl() {
+	public URI getUrl() {
 		return url;
 	}
 
-	public void setUrl(final String url) {
+	public void setUrl(final URI url) {
 		this.url = url;
 	}
 

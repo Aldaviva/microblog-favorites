@@ -2,16 +2,18 @@ package com.aldaviva.twitter_favorites.services.twitter;
 
 import com.aldaviva.twitter_favorites.FavoritePost;
 
+import java.net.URI;
+
 public class FavoriteTweet extends FavoritePost {
 
-	private String embeddedUrl;
+	private URI embeddedUrl;
 	private boolean isProtected;
 
-	public String getEmbeddedUrl() {
+	public URI getEmbeddedUrl() {
 		return embeddedUrl;
 	}
 
-	public void setEmbeddedUrl(final String embeddedUrl) {
+	public void setEmbeddedUrl(final URI embeddedUrl) {
 		this.embeddedUrl = embeddedUrl;
 	}
 

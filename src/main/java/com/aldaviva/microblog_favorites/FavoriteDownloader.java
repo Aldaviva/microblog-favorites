@@ -15,6 +15,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -118,8 +119,8 @@ public abstract class FavoriteDownloader<POST extends FavoritePost> implements A
 		final File subdirectory = getOrCreateFirstNonFullSubdirectory();
 		final File screenshotFile = new File(subdirectory, getFilename(favorite));
 
-		final String pageUrl = getPageUrl(favorite);
-		page.navigate(pageUrl);
+		final URI pageUrl = getPageUrl(favorite);
+		page.navigate(pageUrl.toString());
 
 		onNavigateToPage(page, favorite);
 		waitForPageToLoad(page, favorite);
@@ -149,7 +150,7 @@ public abstract class FavoriteDownloader<POST extends FavoritePost> implements A
 		return taggedImage;
 	}
 
-	public String getFilename(final FavoritePost favorite) {
+	public final String getFilename(final FavoritePost favorite) {
 		return favorite.getId() + ".jpg";
 	}
 
@@ -162,7 +163,7 @@ public abstract class FavoriteDownloader<POST extends FavoritePost> implements A
 			newRecords.add(new IptcRecord(IptcTypes.BYLINE_TITLE, favorite.getAuthorHandle())); // I don't think Twitter handles can contain characters that require URL-encoding
 			newRecords.add(new IptcRecord(IptcTypes.CAPTION_ABSTRACT, normalizeCharacterSet(favorite.getBody(), StandardCharsets.ISO_8859_1)));
 			newRecords.add(new IptcRecord(IptcTypes.DATE_CREATED, IPTC_DATE_FORMATTER.format(favorite.getDate())));
-			newRecords.add(new IptcRecord(IptcTypes.SOURCE, favorite.getUrl()));
+			newRecords.add(new IptcRecord(IptcTypes.SOURCE, favorite.getUrl().toString()));
 
 			final PhotoshopApp13Data newData = new PhotoshopApp13Data(newRecords, Collections.emptyList());
 
@@ -196,7 +197,7 @@ public abstract class FavoriteDownloader<POST extends FavoritePost> implements A
 	protected void onNavigateToPage(final Page page, final POST favorite) {
 	}
 
-	protected String getPageUrl(final POST favorite) {
+	protected URI getPageUrl(final POST favorite) {
 		return favorite.getUrl();
 	}
 

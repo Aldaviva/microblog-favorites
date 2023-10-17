@@ -1,7 +1,7 @@
 package com.aldaviva.microblog_favorites.services.mastodon;
 
 import com.aldaviva.microblog_favorites.ConfigurationFactory;
-import com.aldaviva.microblog_favorites.FavoriteDownloader;
+import com.aldaviva.microblog_favorites.FavoritesDownloader;
 import com.aldaviva.microblog_favorites.FavoritePost;
 import com.aldaviva.microblog_favorites.services.mastodon.MastodonSchema.FavoritesListResponse;
 import com.aldaviva.microblog_favorites.services.mastodon.MastodonSchema.Status;
@@ -14,7 +14,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MastodonDownloader extends FavoriteDownloader<FavoritePost> {
+public class MastodonDownloader extends FavoritesDownloader<FavoritePost> {
 
 	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(MastodonDownloader.class);
 

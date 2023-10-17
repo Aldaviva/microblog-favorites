@@ -53,9 +53,9 @@ import org.apache.commons.imaging.formats.tiff.constants.TiffTagConstants;
 import org.apache.commons.imaging.formats.tiff.write.TiffOutputDirectory;
 import org.apache.commons.imaging.formats.tiff.write.TiffOutputSet;
 
-public abstract class FavoriteDownloader<POST extends FavoritePost> implements AutoCloseable {
+public abstract class FavoritesDownloader<POST extends FavoritePost> implements AutoCloseable {
 
-	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(FavoriteDownloader.class);
+	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(FavoritesDownloader.class);
 
 	public static final File ONLINE_SERVICES_BACKUP_DIRECTORY = new File("E:\\Backup\\Online services");
 	private static final Pattern FILE_BASENAME_EXTENSION_SPLITTER = Pattern.compile("\\.(?=[^\\.]+$)");
@@ -73,7 +73,7 @@ public abstract class FavoriteDownloader<POST extends FavoritePost> implements A
 	private File subdirectory = null;
 	private int subdirectoryChildCount = 0;
 
-	public FavoriteDownloader() {
+	public FavoritesDownloader() {
 		screenshotsDirectory.mkdirs();
 
 		try {

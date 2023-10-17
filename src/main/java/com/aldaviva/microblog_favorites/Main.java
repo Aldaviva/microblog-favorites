@@ -57,7 +57,7 @@ public class Main {
 		final MastodonDownloader mastodon = new MastodonDownloader(httpClient);
 		final NixplayUploader nixplay = new NixplayUploader(httpClient);
 
-		final Collection<FavoriteDownloader<? extends FavoritePost>> favoriteDownloaders = new ArrayList<>();
+		final Collection<FavoritesDownloader<? extends FavoritePost>> favoriteDownloaders = new ArrayList<>();
 		favoriteDownloaders.add(twitter);
 		favoriteDownloaders.add(bluesky);
 		favoriteDownloaders.add(mastodon);
@@ -69,13 +69,13 @@ public class Main {
 		// Only download Chromium (& ffmpeg), not Firefox or WebKit, in order to save download time, download quota, and disk space
 		System.setProperty("playwright.driver.impl", CustomDriver.class.getName());
 		try (final Playwright playwright = PlaywrightImpl.create(new CreateOptions().setEnv(Collections.singletonMap(CustomDriver.PLAYWRIGHT_BROWSERS_TO_INSTALL, "chromium")))) {
-			final Path storageStatePath = new File(FavoriteDownloader.ONLINE_SERVICES_BACKUP_DIRECTORY, "storage.json").toPath();
+			final Path storageStatePath = new File(FavoritesDownloader.ONLINE_SERVICES_BACKUP_DIRECTORY, "storage.json").toPath();
 			final Browser loginBrowser = playwright.chromium().launch(new LaunchOptions().setHeadless(false));
 			final BrowserContext loginBrowserContext = loginBrowser.newContext(new NewContextOptions()
 			    .setStorageStatePath(Files.exists(storageStatePath) ? storageStatePath : null)); //setStorageStatePath crashes if storage file is not found
 
 			// start log-in session, interactively if needed, for protected posts
-			for (final FavoriteDownloader<?> favoriteDownloader : favoriteDownloaders) {
+			for (final FavoritesDownloader<?> favoriteDownloader : favoriteDownloaders) {
 				try (Page page = loginBrowserContext.newPage()) {
 					favoriteDownloader.signIn(page);
 				}
@@ -90,14 +90,14 @@ public class Main {
 			    .setViewportSize(1920, 1200) //tall enough for protected tweets to not get cut off, especially if they are replies to other long tweets that appear above them
 			    .setStorageStatePath(storageStatePath));
 
-			for (final FavoriteDownloader<? extends FavoritePost> downloader : favoriteDownloaders) {
+			for (final FavoritesDownloader<? extends FavoritePost> downloader : favoriteDownloaders) {
 				saveAndUploadNewFavorites(downloader, postBrowserContext, nixplay);
 			}
 
 			postBrowser.close();
 		}
 
-		for (final FavoriteDownloader<?> favoriteDownloader : favoriteDownloaders) {
+		for (final FavoritesDownloader<?> favoriteDownloader : favoriteDownloaders) {
 			try {
 				favoriteDownloader.close();
 			} catch (final Exception e) {
@@ -112,7 +112,7 @@ public class Main {
 		LOGGER.info("Done.");
 	}
 
-	private static <P extends FavoritePost> void saveAndUploadNewFavorites(final FavoriteDownloader<P> downloader, final BrowserContext postBrowserContext, final NixplayUploader nixplay) {
+	private static <P extends FavoritePost> void saveAndUploadNewFavorites(final FavoritesDownloader<P> downloader, final BrowserContext postBrowserContext, final NixplayUploader nixplay) {
 		final List<P> newFavorites = downloader.listNewFavorites();
 
 		for (final P favorite : newFavorites) {

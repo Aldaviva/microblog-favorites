@@ -1,7 +1,7 @@
 package com.aldaviva.microblog_favorites.services.twitter;
 
 import com.aldaviva.microblog_favorites.ConfigurationFactory;
-import com.aldaviva.microblog_favorites.FavoriteDownloader;
+import com.aldaviva.microblog_favorites.FavoritesDownloader;
 
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Page.AddStyleTagOptions;
@@ -19,7 +19,7 @@ import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.conf.ConfigurationBuilder;
 
-public class TwitterDownloader extends FavoriteDownloader<FavoriteTweet> {
+public class TwitterDownloader extends FavoritesDownloader<FavoriteTweet> {
 
 	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(TwitterDownloader.class);
 

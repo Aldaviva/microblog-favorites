@@ -1,7 +1,7 @@
 package com.aldaviva.microblog_favorites.services.bluesky;
 
 import com.aldaviva.microblog_favorites.ConfigurationFactory;
-import com.aldaviva.microblog_favorites.FavoriteDownloader;
+import com.aldaviva.microblog_favorites.FavoritesDownloader;
 import com.aldaviva.microblog_favorites.FavoritePost;
 import com.aldaviva.microblog_favorites.services.bluesky.BlueskySchema.FavoritesListResponse;
 import com.aldaviva.microblog_favorites.services.bluesky.BlueskySchema.FeedItem;
@@ -16,7 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.glassfish.jersey.uri.UriComponent;
 
-public class BlueskyDownloader extends FavoriteDownloader<FavoritePost> {
+public class BlueskyDownloader extends FavoritesDownloader<FavoritePost> {
 
 	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(BlueskyDownloader.class);
 

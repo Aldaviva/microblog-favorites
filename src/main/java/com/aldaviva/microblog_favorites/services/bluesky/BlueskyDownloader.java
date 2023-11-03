@@ -1,19 +1,21 @@
 package com.aldaviva.microblog_favorites.services.bluesky;
 
 import com.aldaviva.microblog_favorites.ConfigurationFactory;
-import com.aldaviva.microblog_favorites.FavoritesDownloader;
 import com.aldaviva.microblog_favorites.FavoritePost;
+import com.aldaviva.microblog_favorites.FavoritesDownloader;
 import com.aldaviva.microblog_favorites.services.bluesky.BlueskySchema.FavoritesListResponse;
 import com.aldaviva.microblog_favorites.services.bluesky.BlueskySchema.FeedItem;
 import com.aldaviva.microblog_favorites.services.bluesky.BlueskySchema.Post;
 
 import com.microsoft.playwright.Page;
-import com.microsoft.playwright.Page.WaitForSelectorOptions;
+import com.microsoft.playwright.Page.AddStyleTagOptions;
+import com.microsoft.playwright.Page.ClickOptions;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.core.UriBuilder;
 import java.net.PasswordAuthentication;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.glassfish.jersey.uri.UriComponent;
 
 public class BlueskyDownloader extends FavoritesDownloader<FavoritePost> {
@@ -21,6 +23,7 @@ public class BlueskyDownloader extends FavoritesDownloader<FavoritePost> {
 	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(BlueskyDownloader.class);
 
 	private static final UriBuilder POST_PAGE_URI = UriBuilder.fromUri("https://bsky.app/profile/{author}/post/{recordkey}");
+	private static final String POST_STYLESHEET = readResourceFileAsString("/styles/bluesky-post.css");
 
 	private final BlueskyClient bluesky;
 
@@ -31,7 +34,7 @@ public class BlueskyDownloader extends FavoritesDownloader<FavoritePost> {
 	}
 
 	@Override
-	protected String getServiceName() {
+	public String getServiceName() {
 		return "Bluesky";
 	}
 
@@ -47,7 +50,9 @@ public class BlueskyDownloader extends FavoritesDownloader<FavoritePost> {
 
 		page.navigate("https://bsky.app");
 		LOGGER.info("Waiting for user to log in to Bluesky...");
-		page.waitForSelector("input[data-testid='searchTextInput']", new WaitForSelectorOptions().setTimeout(ONE_DAY_IN_MILLIS)); // give the user enough time to log in
+		page.click("a[aria-label='Settings']", new ClickOptions().setTimeout(ONE_HOUR_IN_MILLIS)); // give the user enough time to log in
+
+		page.click("button[aria-label='Dark']");
 	}
 
 	@Override
@@ -65,7 +70,7 @@ public class BlueskyDownloader extends FavoritesDownloader<FavoritePost> {
 				final FavoritePost favorite = new FavoritePost();
 				favorites.add(favorite);
 
-				favorite.setAuthorName(post.author.displayName);
+				favorite.setAuthorName(Optional.ofNullable(post.author.displayName).orElse(post.author.handle));
 				favorite.setAuthorHandle(post.author.handle);
 				favorite.setDate(post.record.createdAt);
 				favorite.setBody(post.record.text);
@@ -80,8 +85,14 @@ public class BlueskyDownloader extends FavoritesDownloader<FavoritePost> {
 	}
 
 	@Override
+	protected void onNavigateToPage(final Page page, final FavoritePost favorite) {
+		super.onNavigateToPage(page, favorite);
+		page.addStyleTag(new AddStyleTagOptions().setContent(POST_STYLESHEET));
+	}
+
+	@Override
 	protected String getScreenshotSelector(final FavoritePost favorite) {
-		return "div[data-testid ^= 'postThreadItem-by-']";
+		return "div[data-testid ^= 'postThreadItem-by-']:has(div[aria-label='Likes on this post'])";
 	}
 
 	@Override

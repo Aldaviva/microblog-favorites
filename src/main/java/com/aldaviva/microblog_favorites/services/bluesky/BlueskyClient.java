@@ -54,10 +54,11 @@ public class BlueskyClient {
 	 * Sign out of the current session for this object instance. Subsequent requests will not send authentication until you call {@link #signIn(PasswordAuthentication)}.
 	 */
 	public void signOut() {
-		target("com.atproto.server.deleteSession")
+		// This just returns error 400: {"error":"InvalidToken","message":"Bad token scope"}
+		/*target("com.atproto.server.deleteSession")
 		    .request()
 		    .post(null)
-		    .close();
+		    .close();*/
 
 		this.authFilter.setAccessToken(null);
 	}

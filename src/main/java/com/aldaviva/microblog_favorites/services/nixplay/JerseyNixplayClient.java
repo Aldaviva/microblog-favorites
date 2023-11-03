@@ -9,7 +9,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import jakarta.annotation.Priority;
 import jakarta.ws.rs.HttpMethod;
+import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
@@ -19,6 +21,7 @@ import jakarta.ws.rs.core.Cookie;
 import jakarta.ws.rs.core.Form;
 import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import java.io.File;
@@ -49,6 +52,7 @@ public class JerseyNixplayClient implements NixplayClient {
 	private static final URI UPLOAD_MONITOR_BASE_URI = URI.create("https://upload-monitor.nixplay.com/");
 	private static final URI EMPTY_URI = URI.create("");
 	private static final String SESSION_ID_COOKIE_NAME = "prod.session.id";
+	private static final String TOKEN_ID_COOKIE_NAME = "prod.token.id";
 	private static final String CSRF_TOKEN_COOKIE_NAME = "prod.csrftoken";
 	private static final String CSRF_TOKEN_HEADER_NAME = "X-CSRFToken";
 	private static final MediaType PHOTO_CONTENT_TYPE = MediaType.valueOf("image/jpeg");
@@ -57,6 +61,7 @@ public class JerseyNixplayClient implements NixplayClient {
 
 	private String sessionId;
 	private String csrfToken;
+	private String tokenId;
 
 	private final Map<Long, String> albumToUploadTokenCache = new HashMap<>();
 	private final boolean closeClient;
@@ -80,6 +85,7 @@ public class JerseyNixplayClient implements NixplayClient {
 		return client.target(API_BASE_URI);
 	}
 
+	@Priority(Priorities.AUTHENTICATION)
 	protected class SessionIdFilter implements ClientRequestFilter {
 
 		private final Set<String> verbsWithSideEffects = new HashSet<>(Arrays.asList(HttpMethod.DELETE, HttpMethod.PATCH, HttpMethod.POST, HttpMethod.PUT));
@@ -87,15 +93,25 @@ public class JerseyNixplayClient implements NixplayClient {
 		@Override
 		public void filter(final ClientRequestContext requestContext) throws IOException {
 			final ClientRequest request = (ClientRequest) requestContext;
+			final MultivaluedMap<String, Object> requestHeaders = request.getHeaders();
 			if (isSubUri(API_BASE_URI, requestContext.getUri())) {
 				if (sessionId != null) {
 					request.cookie(new Cookie.Builder(SESSION_ID_COOKIE_NAME).value(sessionId).build());
 				}
 
+				if (tokenId != null) {
+					request.cookie(new Cookie.Builder(TOKEN_ID_COOKIE_NAME).value(tokenId).build());
+				}
+
 				if (csrfToken != null && verbsWithSideEffects.contains(requestContext.getMethod())) {
 					request.cookie(new Cookie.Builder(CSRF_TOKEN_COOKIE_NAME).value(csrfToken).build());
-					request.getHeaders().putSingle(CSRF_TOKEN_HEADER_NAME, csrfToken);
+					requestHeaders.putSingle(CSRF_TOKEN_HEADER_NAME, csrfToken);
 				}
+
+				// Avoid 403 on POST requests
+				requestHeaders.putSingle("Referer", "https://app.nixplay.com/");
+				requestHeaders.putSingle("Origin", "https://app.nixplay.com");
+				request.cookie(new Cookie.Builder("prod.webapp.version").value("1").build());
 			}
 		}
 	}
@@ -142,6 +158,7 @@ public class JerseyNixplayClient implements NixplayClient {
 			csrfToken = responseCookies.get(CSRF_TOKEN_COOKIE_NAME).getValue();
 			final String sessionId = responseCookies.get(SESSION_ID_COOKIE_NAME).getValue();
 			this.sessionId = sessionId;
+			tokenId = responseCookies.get(TOKEN_ID_COOKIE_NAME).getValue();
 			LOGGER.debug("Exchanged auth token for session ID {}", sessionId);
 			return sessionId;
 		}
@@ -186,7 +203,8 @@ public class JerseyNixplayClient implements NixplayClient {
 		return target()
 		    .path("album/create/json/")
 		    .request()
-		    .post(Entity.form(new Form("name", name)), Album.class);
+		    .post(Entity.form(new Form("name", name)), new GenericType<List<Album>>() {
+		    }).get(0);
 	}
 
 	@Override

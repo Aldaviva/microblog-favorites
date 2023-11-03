@@ -1,8 +1,8 @@
 package com.aldaviva.microblog_favorites;
 
-import com.aldaviva.microblog_favorites.http.CustomHttpUrlConnectorProvider;
 import com.aldaviva.microblog_favorites.http.JacksonConfig.CustomJacksonFeature;
 import com.aldaviva.microblog_favorites.http.JacksonConfig.CustomObjectMapperProvider;
+import com.aldaviva.microblog_favorites.http.UnfuckedCookieSerializer;
 import com.aldaviva.microblog_favorites.services.bluesky.BlueskyDownloader;
 import com.aldaviva.microblog_favorites.services.mastodon.MastodonDownloader;
 import com.aldaviva.microblog_favorites.services.nixplay.NixplayUploader;
@@ -38,6 +38,7 @@ import java.util.regex.Pattern;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.logging.LoggingFeature;
+import org.glassfish.jersey.logging.LoggingFeature.Verbosity;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class Main {
@@ -50,17 +51,14 @@ public class Main {
 	public static void main(final String[] args) throws IOException, URISyntaxException {
 		SLF4JBridgeHandler.removeHandlersForRootLogger();
 		SLF4JBridgeHandler.install();
+		System.setProperty("sun.net.http.allowRestrictedHeaders", "true"); // stop omitting a subset of headers in requests to Nixplay, to avoid 403 errors
 
 		final Client httpClient = createHttpClient();
-		final TwitterDownloader twitter = new TwitterDownloader();
-		final BlueskyDownloader bluesky = new BlueskyDownloader(httpClient);
-		final MastodonDownloader mastodon = new MastodonDownloader(httpClient);
 		final NixplayUploader nixplay = new NixplayUploader(httpClient);
-
 		final Collection<FavoritesDownloader<? extends FavoritePost>> favoriteDownloaders = new ArrayList<>();
-		favoriteDownloaders.add(twitter);
-		favoriteDownloaders.add(bluesky);
-		favoriteDownloaders.add(mastodon);
+		favoriteDownloaders.add(new TwitterDownloader());
+		favoriteDownloaders.add(new BlueskyDownloader(httpClient));
+		favoriteDownloaders.add(new MastodonDownloader(httpClient));
 
 		LOGGER.info("Logging into Nixplay...");
 		nixplay.signIn(ConfigurationFactory.getNixplayCredentials());
@@ -68,13 +66,14 @@ public class Main {
 		LOGGER.info("Initializing browser...");
 		// Only download Chromium (& ffmpeg), not Firefox or WebKit, in order to save download time, download quota, and disk space
 		System.setProperty("playwright.driver.impl", CustomDriver.class.getName());
+		int favoritesDownloaded = 0;
 		try (final Playwright playwright = PlaywrightImpl.create(new CreateOptions().setEnv(Collections.singletonMap(CustomDriver.PLAYWRIGHT_BROWSERS_TO_INSTALL, "chromium")))) {
 			final Path storageStatePath = new File(FavoritesDownloader.ONLINE_SERVICES_BACKUP_DIRECTORY, "storage.json").toPath();
 			final Browser loginBrowser = playwright.chromium().launch(new LaunchOptions().setHeadless(false));
 			final BrowserContext loginBrowserContext = loginBrowser.newContext(new NewContextOptions()
 			    .setStorageStatePath(Files.exists(storageStatePath) ? storageStatePath : null)); //setStorageStatePath crashes if storage file is not found
 
-			// start log-in session, interactively if needed, for protected posts
+			// start log-in session, interactively if needed
 			for (final FavoritesDownloader<?> favoriteDownloader : favoriteDownloaders) {
 				try (Page page = loginBrowserContext.newPage()) {
 					favoriteDownloader.signIn(page);
@@ -91,7 +90,7 @@ public class Main {
 			    .setStorageStatePath(storageStatePath));
 
 			for (final FavoritesDownloader<? extends FavoritePost> downloader : favoriteDownloaders) {
-				saveAndUploadNewFavorites(downloader, postBrowserContext, nixplay);
+				favoritesDownloaded += saveAndUploadNewFavorites(downloader, postBrowserContext, nixplay);
 			}
 
 			postBrowser.close();
@@ -109,10 +108,10 @@ public class Main {
 		} catch (final Exception e) {
 		}
 
-		LOGGER.info("Done.");
+		LOGGER.info("Done, uploaded {} favorites.", favoritesDownloaded);
 	}
 
-	private static <P extends FavoritePost> void saveAndUploadNewFavorites(final FavoritesDownloader<P> downloader, final BrowserContext postBrowserContext, final NixplayUploader nixplay) {
+	private static <P extends FavoritePost> int saveAndUploadNewFavorites(final FavoritesDownloader<P> downloader, final BrowserContext postBrowserContext, final NixplayUploader nixplay) {
 		final List<P> newFavorites = downloader.listNewFavorites();
 
 		for (final P favorite : newFavorites) {
@@ -120,27 +119,34 @@ public class Main {
 			try (Page page = postBrowserContext.newPage()) {
 				final byte[] taggedImage = downloader.downloadFavorite(favorite, page);
 
-				final Album album = nixplay.getOrCreateNextNonFullAlbum("Favorite " + titleCase(favorite.getPostTypeNoun(true)) + " ");
-				final Playlist playlist = nixplay.getOrCreatePlaylist(album);
-				final String filename = downloader.getFilename(favorite);
+				if (nixplay != null) {
+					final Album album = nixplay.getOrCreateNextNonFullAlbum(downloader.getServiceName() + " Favorites ");
+					final Playlist playlist = nixplay.getOrCreatePlaylist(album);
+					final String filename = downloader.getFilename(favorite);
 
-				nixplay.uploadToAlbumAndPlaylist(taggedImage, filename, album, playlist);
+					nixplay.uploadToAlbumAndPlaylist(taggedImage, filename, album, playlist);
+				}
 			}
 		}
+
+		return newFavorites.size();
 	}
 
 	private static Client createHttpClient() {
 		final ClientConfig clientConfig = new ClientConfig();
 		clientConfig.register(CustomObjectMapperProvider.class);
 		clientConfig.register(CustomJacksonFeature.class);
+		clientConfig.register(UnfuckedCookieSerializer.class);
 		clientConfig.property(ClientProperties.CONNECT_TIMEOUT, 5 * 1000);
 		clientConfig.property(ClientProperties.READ_TIMEOUT, 30 * 1000);
 		clientConfig.property(ClientProperties.FOLLOW_REDIRECTS, false);
-		clientConfig.connectorProvider(new CustomHttpUrlConnectorProvider());
 
+		/*
+		 * Set the http logger to TRACE level for HTTP wire logging in logback.xml
+		 */
 		final Logger httpLogger = Logger.getLogger("http");
 		httpLogger.setLevel(Level.ALL);
-		clientConfig.register(new LoggingFeature(httpLogger, LoggingFeature.Verbosity.PAYLOAD_ANY));
+		clientConfig.register(new LoggingFeature(httpLogger, Level.FINEST, Verbosity.PAYLOAD_ANY, 1 * 1024 * 1024)); // LoggingInterceptor actually allocates maxEntitySize bytes for every request, so probably shouldn't be MAX_INT
 
 		return ClientBuilder.newClient(clientConfig);
 	}

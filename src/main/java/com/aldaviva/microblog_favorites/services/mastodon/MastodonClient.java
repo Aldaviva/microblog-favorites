@@ -2,12 +2,15 @@ package com.aldaviva.microblog_favorites.services.mastodon;
 
 import com.aldaviva.microblog_favorites.http.BearerAuthenticationFilter;
 import com.aldaviva.microblog_favorites.services.mastodon.MastodonSchema.FavoritesListResponse;
+import com.aldaviva.microblog_favorites.services.mastodon.MastodonSchema.Status;
 
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.Link;
 import jakarta.ws.rs.core.Response;
 import java.net.URI;
+import java.util.List;
 
 public class MastodonClient {
 
@@ -58,7 +61,9 @@ public class MastodonClient {
 		    .request()
 		    .get(Response.class);
 
-		final FavoritesListResponse result = response.readEntity(FavoritesListResponse.class);
+		final FavoritesListResponse result = new FavoritesListResponse();
+		result.statuses = response.readEntity(new GenericType<List<Status>>() {
+		});
 
 		final Link nextLink = response.getLink("next");
 		if (nextLink != null) {

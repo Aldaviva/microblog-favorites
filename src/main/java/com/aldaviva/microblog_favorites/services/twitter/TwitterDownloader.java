@@ -40,7 +40,7 @@ public class TwitterDownloader extends FavoritesDownloader<FavoriteTweet> {
 	}
 
 	@Override
-	protected String getServiceName() {
+	public String getServiceName() {
 		return "Twitter";
 	}
 
@@ -48,7 +48,7 @@ public class TwitterDownloader extends FavoritesDownloader<FavoriteTweet> {
 	public void signIn(final Page page) {
 		page.navigate("https://twitter.com");
 		LOGGER.info("Waiting for user to log in to Twitter...");
-		page.waitForURL("https://twitter.com/home", new WaitForURLOptions().setTimeout(ONE_DAY_IN_MILLIS)); // give the user enough time to log in
+		page.waitForURL("https://twitter.com/home", new WaitForURLOptions().setTimeout(ONE_HOUR_IN_MILLIS)); // give the user enough time to log in
 
 		// Set page theme to Lights Out (black background) for protected tweets
 		page.navigate("https://twitter.com/i/display"); // keyboard shortcuts broke, so use URL routing instead
@@ -71,6 +71,7 @@ public class TwitterDownloader extends FavoritesDownloader<FavoriteTweet> {
 
 				for (final Status tweet : page) {
 					final FavoriteTweet favorite = new FavoriteTweet();
+					favorites.add(favorite);
 
 					favorite.setId(String.valueOf(tweet.getId()));
 					favorite.setAuthorName(tweet.getUser().getName());
@@ -80,10 +81,6 @@ public class TwitterDownloader extends FavoritesDownloader<FavoriteTweet> {
 					favorite.setUrl(POST_PAGE_URI.build(favorite.getAuthorHandle(), favorite.getId()));
 					favorite.setEmbeddedUrl(POST_EMBEDDED_PAGE_URI.build(favorite.getId())); // embedded page refuses to load protected tweets
 					favorite.setProtected(tweet.getUser().isProtected());
-
-					if (!previouslySavedPostIds.contains(favorite.getId())) {
-						favorites.add(favorite);
-					}
 				}
 			}
 

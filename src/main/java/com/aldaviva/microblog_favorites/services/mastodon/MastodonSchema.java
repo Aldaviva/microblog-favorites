@@ -23,7 +23,7 @@ public final class MastodonSchema {
 		public URI uri;
 		public URI url;
 		public String content;
-		public Account author;
+		public Account account;
 	}
 
 	public static final class Account {

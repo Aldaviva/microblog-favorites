@@ -1,8 +1,8 @@
 package com.aldaviva.microblog_favorites.services.mastodon;
 
 import com.aldaviva.microblog_favorites.ConfigurationFactory;
-import com.aldaviva.microblog_favorites.FavoritesDownloader;
 import com.aldaviva.microblog_favorites.FavoritePost;
+import com.aldaviva.microblog_favorites.FavoritesDownloader;
 import com.aldaviva.microblog_favorites.services.mastodon.MastodonSchema.FavoritesListResponse;
 import com.aldaviva.microblog_favorites.services.mastodon.MastodonSchema.Status;
 
@@ -19,7 +19,7 @@ public class MastodonDownloader extends FavoritesDownloader<FavoritePost> {
 	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(MastodonDownloader.class);
 
 	private static final URI BASE_URI = ConfigurationFactory.getMastodonCredentials().getServerBaseUri();
-	private static final UriBuilder POST_PAGE_URI = UriBuilder.fromUri(BASE_URI).path("{author}/{postid}");
+	private static final UriBuilder POST_PAGE_URI = UriBuilder.fromUri(BASE_URI).path("@{author}/{postid}");
 
 	private final MastodonClient mastodon;
 
@@ -28,7 +28,7 @@ public class MastodonDownloader extends FavoritesDownloader<FavoritePost> {
 	}
 
 	@Override
-	protected String getServiceName() {
+	public String getServiceName() {
 		return "Mastodon";
 	}
 
@@ -38,7 +38,7 @@ public class MastodonDownloader extends FavoritesDownloader<FavoritePost> {
 
 		page.navigate(BASE_URI.toString());
 		LOGGER.info("Waiting for user to log in to Mastodon...");
-		page.waitForURL(UriBuilder.fromUri(BASE_URI).path("home").build().toString(), new WaitForURLOptions().setTimeout(ONE_DAY_IN_MILLIS)); // give the user enough time to log in
+		page.waitForURL(UriBuilder.fromUri(BASE_URI).path("home").build().toString(), new WaitForURLOptions().setTimeout(ONE_HOUR_IN_MILLIS)); // give the user enough time to log in
 	}
 
 	@Override
@@ -53,12 +53,12 @@ public class MastodonDownloader extends FavoritesDownloader<FavoritePost> {
 				final FavoritePost favorite = new FavoritePost();
 				favorites.add(favorite);
 
-				favorite.setAuthorHandle(status.author.acct);
-				favorite.setAuthorName(status.author.displayName);
+				favorite.setAuthorHandle(status.account.acct);
+				favorite.setAuthorName(status.account.displayName);
 				favorite.setBody(status.content);
 				favorite.setDate(status.createdAt);
 				favorite.setId(status.id);
-				favorite.setUrl(POST_PAGE_URI.build(status.author.acct, status.id));
+				favorite.setUrl(POST_PAGE_URI.build(status.account.acct, status.id));
 			}
 
 			nextPage = page.nextPage;

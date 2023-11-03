@@ -5,6 +5,7 @@ import com.aldaviva.microblog_favorites.services.nixplay.NixplayUploader;
 import com.microsoft.playwright.ElementHandle;
 import com.microsoft.playwright.ElementHandle.ScreenshotOptions;
 import com.microsoft.playwright.Page;
+import com.microsoft.playwright.Page.WaitForSelectorOptions;
 import com.microsoft.playwright.options.LoadState;
 import com.microsoft.playwright.options.ScreenshotType;
 import java.io.BufferedOutputStream;
@@ -57,9 +58,9 @@ public abstract class FavoritesDownloader<POST extends FavoritePost> implements 
 
 	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(FavoritesDownloader.class);
 
-	public static final File ONLINE_SERVICES_BACKUP_DIRECTORY = new File("E:\\Backup\\Online services");
+	public static final File ONLINE_SERVICES_BACKUP_DIRECTORY = new File(System.getProperty("onlineServicesBackupDirectory", "E:\\Backup\\Online services"));
 	private static final Pattern FILE_BASENAME_EXTENSION_SPLITTER = Pattern.compile("\\.(?=[^\\.]+$)");
-	public static final long ONE_DAY_IN_MILLIS = Duration.ofDays(1).toMillis();
+	public static final long ONE_HOUR_IN_MILLIS = Duration.ofHours(1).toMillis();
 	private static final ZoneId MY_TIME_ZONE = ZoneId.of("America/Los_Angeles");
 	private static final DateTimeFormatter EXIF_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss", Locale.US).withZone(MY_TIME_ZONE);
 	private static final DateTimeFormatter IPTC_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss", Locale.US).withZone(MY_TIME_ZONE);
@@ -90,6 +91,8 @@ public abstract class FavoritesDownloader<POST extends FavoritePost> implements 
 					return FileVisitResult.CONTINUE;
 				}
 			});
+
+			LOGGER.debug("Found {} existing {} favorites on disk.", previouslySavedPostIds.size(), getServiceName());
 		} catch (final IOException e) {
 			throw new RuntimeException("Failed to list existing downloaded screenshots in " + screenshotsDirectory, e);
 		}
@@ -98,13 +101,14 @@ public abstract class FavoritesDownloader<POST extends FavoritePost> implements 
 	/**
 	 * The name of the service used in the backup directory. Must be a valid filesystem path segment.
 	 */
-	protected abstract String getServiceName();
+	public abstract String getServiceName();
 
 	public abstract void signIn(final Page page);
 
 	protected abstract List<POST> listAllFavorites();
 
 	public final List<POST> listNewFavorites() {
+		LOGGER.info("Fetching all favorites from {}...", getServiceName());
 		final List<POST> allFavorites = listAllFavorites();
 		final List<POST> newFavorites = new ArrayList<>(allFavorites.size());
 		for (final POST favorite : allFavorites) {
@@ -112,9 +116,14 @@ public abstract class FavoritesDownloader<POST extends FavoritePost> implements 
 				newFavorites.add(favorite);
 			}
 		}
+		LOGGER.info("There are {} favorites on {}, {} of which are new.", allFavorites.size(), getServiceName(), newFavorites.size());
 		return newFavorites;
 	}
 
+	/**
+	 * Writes image file to disk
+	 * @return the bytes of the image file, including EXIF/IPTC metadata
+	 */
 	public final byte[] downloadFavorite(final POST favorite, final Page page) {
 		final File subdirectory = getOrCreateFirstNonFullSubdirectory();
 		final File screenshotFile = new File(subdirectory, getFilename(favorite));
@@ -126,10 +135,7 @@ public abstract class FavoritesDownloader<POST extends FavoritePost> implements 
 		waitForPageToLoad(page, favorite);
 
 		final String screenshotSelector = getScreenshotSelector(favorite);
-		final ElementHandle screenshotEl = page.querySelector(screenshotSelector);
-		if (screenshotEl == null) {
-			throw new RuntimeException("Failed to find element on page " + pageUrl + " with selector " + screenshotSelector);
-		}
+		final ElementHandle screenshotEl = page.waitForSelector(screenshotSelector, new WaitForSelectorOptions().setTimeout(30 * 1000));
 
 		final byte[] untaggedImage = screenshotEl.screenshot(new ScreenshotOptions()
 		    .setQuality(80)

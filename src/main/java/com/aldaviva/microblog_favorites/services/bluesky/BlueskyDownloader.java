@@ -48,11 +48,11 @@ public class BlueskyDownloader extends FavoritesDownloader<FavoritePost> {
 		LOGGER.debug("Signing in with username {}", credentials.getUserName());
 		handle = bluesky.signIn(credentials);
 
-		page.navigate("https://bsky.app");
+		page.navigate("https://bsky.app/settings/appearance");
 		LOGGER.info("Waiting for user to log in to Bluesky...");
-		page.click("a[aria-label='Settings']", new ClickOptions().setTimeout(ONE_HOUR_IN_MILLIS)); // give the user enough time to log in
 
-		page.click("button[aria-label='Dark']");
+		page.click("div[aria-label='Dark mode'] div[aria-label='Dark']", new ClickOptions().setTimeout(ONE_HOUR_IN_MILLIS));
+		page.click("div[aria-label='Dark theme'] div[aria-label='Dark']");
 	}
 
 	@Override

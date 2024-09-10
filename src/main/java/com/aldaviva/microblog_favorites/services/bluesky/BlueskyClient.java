@@ -3,10 +3,10 @@ package com.aldaviva.microblog_favorites.services.bluesky;
 import com.aldaviva.microblog_favorites.http.BearerAuthenticationFilter;
 import com.aldaviva.microblog_favorites.services.bluesky.BlueskySchema.FavoritesListResponse;
 
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.GenericType;
 import java.net.PasswordAuthentication;
 import java.net.URI;
 import java.util.HashMap;
@@ -40,14 +40,13 @@ public class BlueskyClient {
 		authenticationRequestBody.put("identifier", credentials.getUserName());
 		authenticationRequestBody.put("password", new String(credentials.getPassword()));
 
-		final Map<String, String> authenticationResponseBody = httpClient.target(API_BASE)
+		final ObjectNode authenticationResponseBody = httpClient.target(API_BASE)
 		    .path("com.atproto.server.createSession")
 		    .request()
-		    .post(Entity.json(authenticationRequestBody), new GenericType<Map<String, String>>() {
-		    });
+		    .post(Entity.json(authenticationRequestBody), ObjectNode.class);
 
-		this.authFilter.setAccessToken(authenticationResponseBody.get("accessJwt"));
-		return authenticationResponseBody.get("handle");
+		this.authFilter.setAccessToken(authenticationResponseBody.get("accessJwt").textValue());
+		return authenticationResponseBody.get("handle").textValue();
 	}
 
 	/**

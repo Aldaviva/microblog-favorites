@@ -8,7 +8,6 @@ import com.aldaviva.microblog_favorites.services.mastodon.MastodonDownloader;
 import com.aldaviva.microblog_favorites.services.nixplay.NixplayUploader;
 import com.aldaviva.microblog_favorites.services.nixplay.data.Album;
 import com.aldaviva.microblog_favorites.services.nixplay.data.Playlist;
-import com.aldaviva.microblog_favorites.services.twitter.TwitterDownloader;
 
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.Browser.NewContextOptions;
@@ -56,7 +55,7 @@ public class Main {
 		final Client httpClient = createHttpClient();
 		final NixplayUploader nixplay = new NixplayUploader(httpClient);
 		final Collection<FavoritesDownloader<? extends FavoritePost>> favoriteDownloaders = new ArrayList<>();
-		favoriteDownloaders.add(new TwitterDownloader());
+		//		favoriteDownloaders.add(new TwitterDownloader());
 		favoriteDownloaders.add(new BlueskyDownloader(httpClient));
 		favoriteDownloaders.add(new MastodonDownloader(httpClient));
 

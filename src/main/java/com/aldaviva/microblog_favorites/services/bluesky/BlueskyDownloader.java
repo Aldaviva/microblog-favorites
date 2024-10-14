@@ -51,7 +51,7 @@ public class BlueskyDownloader extends FavoritesDownloader<FavoritePost> {
 		page.navigate("https://bsky.app/settings/appearance");
 		LOGGER.info("Waiting for user to log in to Bluesky...");
 
-		page.click("div[aria-label='Dark mode'] div[aria-label='Dark']", new ClickOptions().setTimeout(ONE_HOUR_IN_MILLIS));
+		page.click("div[aria-label='Color mode'] div[aria-label='Dark']", new ClickOptions().setTimeout(ONE_HOUR_IN_MILLIS));
 		page.click("div[aria-label='Dark theme'] div[aria-label='Dark']");
 	}
 

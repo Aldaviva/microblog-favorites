@@ -102,17 +102,17 @@ public abstract class JacksonConfig {
 	@Provider
 	public static class CustomObjectMapperProvider implements ContextResolver<ObjectMapper> {
 
-		public static final ObjectMapper objectMapper = new ObjectMapper();
+		public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
 		static {
-			objectMapper.registerModule(new JavaTimeModule());
-			objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
-			objectMapper.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL);
+			OBJECT_MAPPER.registerModule(new JavaTimeModule());
+			OBJECT_MAPPER.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
+			OBJECT_MAPPER.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL);
 		}
 
 		@Override
 		public ObjectMapper getContext(final Class<?> type) {
-			return objectMapper;
+			return OBJECT_MAPPER;
 		}
 	}
 }

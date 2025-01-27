@@ -24,9 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TwitterGraphDownloader extends FavoritesDownloader<FavoriteTweet> {
+public class TwitterGraphQlDownloader extends FavoritesDownloader<FavoriteTweet> {
 
-	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(TwitterGraphDownloader.class);
+	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(TwitterGraphQlDownloader.class);
 
 	private static final int MAX_TWEETS_PER_PAGE = 88; // 20 is default from webapp
 	private static final int MAX_TWEETS_TO_LOAD = MAX_TWEETS_PER_PAGE * 3;
@@ -37,11 +37,11 @@ public class TwitterGraphDownloader extends FavoritesDownloader<FavoriteTweet> {
 	    .fromUri("https://platform.twitter.com/embed/Tweet.html?dnt=false&embedId=twitter-widget-0&frame=false&hideCard=false&hideThread=false&id={tweetid}&lang=en&theme=dark");
 	private static final TwitterGraphCredentials CREDENTIALS = ConfigurationFactory.getTwitterCredentials();
 	private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss xx yyyy"); // Thu Jan 16 19:15:41 +0000 2025
+	private static final ObjectMapper OBJECT_MAPPER = CustomObjectMapperProvider.OBJECT_MAPPER;
 
 	private final Client httpClient;
-	private final ObjectMapper objectMapper = CustomObjectMapperProvider.objectMapper;
 
-	public TwitterGraphDownloader(final Client httpClient) {
+	public TwitterGraphQlDownloader(final Client httpClient) {
 		this.httpClient = httpClient;
 	}
 
@@ -89,12 +89,9 @@ public class TwitterGraphDownloader extends FavoritesDownloader<FavoriteTweet> {
 				pageCursor = null;
 
 				final ObjectNode graphResponse = httpClient.target("https://x.com/i/api/graphql/ejIZbvsO6hPdJQHetmIF1g/Likes")
-				    .queryParam("variables", "{variables}")
-				    .resolveTemplate("variables", objectMapper.writeValueAsString(requestVariables))
-				    .queryParam("features", "{features}")
-				    .resolveTemplate("features", requestFeatures)
-				    .queryParam("fieldToggles", "{fieldToggles}")
-				    .resolveTemplate("fieldToggles", objectMapper.writeValueAsString(requestFieldToggles))
+				    .queryParam("variables", "{variables}").resolveTemplate("variables", OBJECT_MAPPER.writeValueAsString(requestVariables))
+				    .queryParam("features", "{features}").resolveTemplate("features", requestFeatures)
+				    .queryParam("fieldToggles", "{fieldToggles}").resolveTemplate("fieldToggles", OBJECT_MAPPER.writeValueAsString(requestFieldToggles))
 				    .request()
 				    .cookie("_twitter_sess", CREDENTIALS.getSessionId())
 				    .cookie("auth_token", CREDENTIALS.getAuthToken())

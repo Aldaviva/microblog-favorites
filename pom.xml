@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.aldaviva</groupId>
 	<artifactId>microblog-favorites</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.1.0</version>
 	<name>Microblog Favorites</name>
 	<description>Save favorited posts from Twitter, Mastodon, and Bluesky as images with metadata</description>
 
@@ -27,7 +27,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<playwright.version>1.27.1</playwright.version>
 		<commons-imaging.version>1.0-alpha3</commons-imaging.version>
-		<twitter4j.version>4.0.6</twitter4j.version>
 		<jersey.version>3.1.10</jersey.version>
 		<logback.version>1.5.16</logback.version>
 		<slf4j.version>2.0.9</slf4j.version>
@@ -46,13 +45,6 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-imaging</artifactId>
 			<version>${commons-imaging.version}</version>
-		</dependency>
-
-		<!-- Twitter4J -->
-		<dependency>
-			<groupId>org.twitter4j</groupId>
-			<artifactId>twitter4j-core</artifactId>
-			<version>${twitter4j.version}</version>
 		</dependency>
 
 		<!-- Jersey -->

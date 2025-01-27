@@ -60,8 +60,7 @@ public abstract class JacksonConfig {
 			}
 
 			// Disable other JSON providers.
-			context.property(PropertiesHelper.getPropertyNameForRuntime(InternalProperties.JSON_FEATURE, config.getRuntimeType()),
-			    JSON_FEATURE);
+			context.property(PropertiesHelper.getPropertyNameForRuntime(InternalProperties.JSON_FEATURE, config.getRuntimeType()), JSON_FEATURE);
 
 			// Register Jackson.
 			if (!config.isRegistered(jacksonProviderClass)) {
@@ -103,10 +102,9 @@ public abstract class JacksonConfig {
 	@Provider
 	public static class CustomObjectMapperProvider implements ContextResolver<ObjectMapper> {
 
-		private final ObjectMapper objectMapper;
+		public static final ObjectMapper objectMapper = new ObjectMapper();
 
-		public CustomObjectMapperProvider() {
-			objectMapper = new ObjectMapper();
+		static {
 			objectMapper.registerModule(new JavaTimeModule());
 			objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 			objectMapper.enable(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL);

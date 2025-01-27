@@ -8,6 +8,7 @@ import com.aldaviva.microblog_favorites.services.mastodon.MastodonDownloader;
 import com.aldaviva.microblog_favorites.services.nixplay.NixplayUploader;
 import com.aldaviva.microblog_favorites.services.nixplay.data.Album;
 import com.aldaviva.microblog_favorites.services.nixplay.data.Playlist;
+import com.aldaviva.microblog_favorites.services.twitter.TwitterGraphDownloader;
 
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.Browser.NewContextOptions;
@@ -53,9 +54,10 @@ public class Main {
 		System.setProperty("sun.net.http.allowRestrictedHeaders", "true"); // stop omitting a subset of headers in requests to Nixplay, to avoid 403 errors
 
 		final Client httpClient = createHttpClient();
+
 		final NixplayUploader nixplay = new NixplayUploader(httpClient);
 		final Collection<FavoritesDownloader<? extends FavoritePost>> favoriteDownloaders = new ArrayList<>();
-		//		favoriteDownloaders.add(new TwitterDownloader());
+		favoriteDownloaders.add(new TwitterGraphDownloader(httpClient));
 		favoriteDownloaders.add(new BlueskyDownloader(httpClient));
 		favoriteDownloaders.add(new MastodonDownloader(httpClient));
 
@@ -140,9 +142,7 @@ public class Main {
 		clientConfig.property(ClientProperties.READ_TIMEOUT, 30 * 1000);
 		clientConfig.property(ClientProperties.FOLLOW_REDIRECTS, false);
 
-		/*
-		 * Set the http logger to TRACE level for HTTP wire logging in logback.xml
-		 */
+		// Set the http logger to TRACE level for HTTP wire logging in logback.xml
 		final Logger httpLogger = Logger.getLogger("http");
 		httpLogger.setLevel(Level.ALL);
 		clientConfig.register(new LoggingFeature(httpLogger, Level.FINEST, Verbosity.PAYLOAD_ANY, 1 * 1024 * 1024)); // LoggingInterceptor actually allocates maxEntitySize bytes for every request, so probably shouldn't be MAX_INT

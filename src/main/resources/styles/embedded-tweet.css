@@ -2,8 +2,8 @@ body { /* JPEG screenshots compress a lot better than PNGs when the tweet contai
 	background-color: black;
 }
 
-a[aria-label="View on Twitter"], /* Top-right Twitter icon */
-a[aria-label="Twitter Ads info and privacy"], /* Bottom-right ⓘ icon */
+a[aria-label="View on X"], /* Top-right Twitter icon */
+a[aria-label="X Ads info and privacy"], /* Bottom-right ⓘ icon */
 div[aria-label="Share"] { /* Bottom Share this tweet link */
     visibility: hidden;
 }

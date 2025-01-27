@@ -28,8 +28,8 @@
 		<playwright.version>1.27.1</playwright.version>
 		<commons-imaging.version>1.0-alpha3</commons-imaging.version>
 		<twitter4j.version>4.0.6</twitter4j.version>
-		<jersey.version>3.1.9</jersey.version>
-		<logback.version>1.5.10</logback.version>
+		<jersey.version>3.1.10</jersey.version>
+		<logback.version>1.5.16</logback.version>
 		<slf4j.version>2.0.9</slf4j.version>
 	</properties>
 
@@ -80,7 +80,7 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
-			<version>2.18.0</version>
+			<version>2.18.2</version>
 		</dependency>
 
 		<!-- Logging -->

@@ -14,6 +14,6 @@
     
     <!-- Set the http logger to TRACE level for HTTP wire logging -->
     <logger name="http" level="warn"/>
-    <logger name="twitter4j" level="warn"/>
+    <!--<logger name="twitter4j" level="warn"/>-->
 
 </configuration>

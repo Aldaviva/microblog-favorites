@@ -129,6 +129,7 @@ public abstract class FavoritesDownloader<POST extends FavoritePost> implements 
 		final File screenshotFile = new File(subdirectory, getFilename(favorite));
 
 		final URI pageUrl = getPageUrl(favorite);
+		LOGGER.debug("Loading {}", pageUrl);
 		page.navigate(pageUrl.toString());
 
 		onNavigateToPage(page, favorite);

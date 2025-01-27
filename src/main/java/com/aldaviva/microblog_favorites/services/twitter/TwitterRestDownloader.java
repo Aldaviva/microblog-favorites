@@ -19,9 +19,10 @@ import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.conf.ConfigurationBuilder;
 
-public class TwitterDownloader extends FavoritesDownloader<FavoriteTweet> {
+@Deprecated
+public class TwitterRestDownloader extends FavoritesDownloader<FavoriteTweet> {
 
-	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(TwitterDownloader.class);
+	private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(TwitterRestDownloader.class);
 
 	private static final int MAX_TWEETS_PER_PAGE = 200;
 	private static final String CUSTOM_EMBEDDED_STYLE = readResourceFileAsString("/styles/embedded-tweet.css");
@@ -32,7 +33,7 @@ public class TwitterDownloader extends FavoritesDownloader<FavoriteTweet> {
 
 	private final Twitter twitterClient;
 
-	public TwitterDownloader() {
+	public TwitterRestDownloader() {
 		final ConfigurationBuilder twitterConfiguration = ConfigurationFactory.createTwitterConfigurationBuilder();
 		twitterConfiguration.setTrimUserEnabled(false);
 		twitterConfiguration.setTweetModeExtended(true);

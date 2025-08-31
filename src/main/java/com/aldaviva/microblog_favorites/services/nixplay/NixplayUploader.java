@@ -38,20 +38,30 @@ public class NixplayUploader implements AutoCloseable {
 		album.photoCount++;
 	}
 
-	public Album getOrCreateNextNonFullAlbum(final String albumNamePrefix) {
-		for (int albumNumber = 1;; albumNumber++) {
-			final String albumTitle = albumNamePrefix + albumNumber;
-
-			final Album candidateAlbum = allAlbums.stream().filter(album -> albumTitle.equals(album.title)).findAny().orElseGet(() -> {
-				final Album album = nixplayClient.createAlbum(albumTitle);
-				allAlbums.add(album);
-				LOGGER.info("Created Nixplay album " + albumTitle);
-				return album;
-			});
-
-			if (candidateAlbum.photoCount < MAX_PHOTOS_PER_PLAYLIST) {
-				return candidateAlbum;
+	public Album getOrCreateAlbum(final String albumNamePrefix) {
+		int maxAlbumNumber = 0;
+		Album maxAlbum = null;
+		for (final Album album : allAlbums) {
+			if (album.title.startsWith(albumNamePrefix)) {
+				try {
+					final int albumNumber = Integer.parseInt(album.title.substring(albumNamePrefix.length()));
+					maxAlbumNumber = Math.max(albumNumber, maxAlbumNumber);
+					if (albumNumber == maxAlbumNumber) {
+						maxAlbum = album;
+					}
+				} catch (final NumberFormatException e) {
+					// continue to next album
+				}
 			}
+		}
+
+		if (maxAlbum != null && maxAlbum.photoCount < MAX_PHOTOS_PER_PLAYLIST) {
+			return maxAlbum;
+		} else {
+			final Album newAlbum = nixplayClient.createAlbum(albumNamePrefix + (maxAlbumNumber + 1));
+			allAlbums.add(newAlbum);
+			LOGGER.info("Created Nixplay album " + newAlbum.title);
+			return newAlbum;
 		}
 	}
 

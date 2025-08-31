@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.aldaviva</groupId>
 	<artifactId>microblog-favorites</artifactId>
-	<version>1.1.0</version>
+	<version>1.2.0</version>
 	<name>Microblog Favorites</name>
 	<description>Save favorited posts from Twitter, Mastodon, and Bluesky as images with metadata</description>
 
@@ -25,11 +25,11 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<playwright.version>1.27.1</playwright.version>
+		<playwright.version>1.55.0</playwright.version>
 		<commons-imaging.version>1.0-alpha3</commons-imaging.version>
-		<jersey.version>3.1.10</jersey.version>
-		<logback.version>1.5.16</logback.version>
-		<slf4j.version>2.0.9</slf4j.version>
+		<jersey.version>3.1.11</jersey.version>
+		<logback.version>1.5.18</logback.version>
+		<slf4j.version>2.0.17</slf4j.version>
 	</properties>
 
 	<dependencies>
@@ -38,6 +38,11 @@
 			<groupId>com.microsoft.playwright</groupId>
 			<artifactId>playwright</artifactId>
 			<version>${playwright.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.aldaviva.playwright</groupId>
+			<artifactId>playwright-extra-install-arguments</artifactId>
+			<version>0.0.2</version>
 		</dependency>
 
 		<!-- Commons Imaging -->
@@ -72,7 +77,7 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
-			<version>2.18.2</version>
+			<version>2.20.0</version>
 		</dependency>
 
 		<!-- Logging -->
@@ -98,7 +103,7 @@
 		<plugins>
 			<plugin>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.13.0</version>
+				<version>3.14.0</version>
 				<inherited>true</inherited>
 				<configuration>
 					<source>21</source>
@@ -129,7 +134,7 @@
 
 			<plugin>
 				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>3.5.0</version>
+				<version>3.6.1</version>
 				<executions>
 					<execution>
 						<id>enforce-maven</id>

@@ -9,6 +9,7 @@ import com.aldaviva.microblog_favorites.services.nixplay.NixplayUploader;
 import com.aldaviva.microblog_favorites.services.nixplay.data.Album;
 import com.aldaviva.microblog_favorites.services.nixplay.data.Playlist;
 import com.aldaviva.microblog_favorites.services.twitter.TwitterGraphQlDownloader;
+import com.aldaviva.playwright.ExtraInstallArgumentsDriver;
 
 import com.microsoft.playwright.Browser;
 import com.microsoft.playwright.Browser.NewContextOptions;
@@ -16,9 +17,7 @@ import com.microsoft.playwright.BrowserContext;
 import com.microsoft.playwright.BrowserType.LaunchOptions;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Playwright;
-import com.microsoft.playwright.Playwright.CreateOptions;
 import com.microsoft.playwright.impl.PlaywrightImpl;
-import com.microsoft.playwright.impl.driver.jar.CustomDriver;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import java.io.File;
@@ -29,7 +28,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -64,11 +62,11 @@ public class Main {
 		LOGGER.info("Logging into Nixplay...");
 		nixplay.signIn(ConfigurationFactory.getNixplayCredentials());
 
-		LOGGER.info("Initializing browser...");
-		// Only download Chromium (& ffmpeg), not Firefox or WebKit, in order to save download time, download quota, and disk space
-		System.setProperty("playwright.driver.impl", CustomDriver.class.getName());
 		int favoritesDownloaded = 0;
-		try (final Playwright playwright = PlaywrightImpl.create(new CreateOptions().setEnv(Collections.singletonMap(CustomDriver.PLAYWRIGHT_BROWSERS_TO_INSTALL, "chromium")))) {
+		LOGGER.info("Initializing browser...");
+		// Only download Chromium (& dependencies), not Firefox or WebKit, in order to save download time, download quota, and disk space
+		ExtraInstallArgumentsDriver.activate();
+		try (final Playwright playwright = PlaywrightImpl.create(ExtraInstallArgumentsDriver.setExtraInstallArguments("chromium"))) {
 			final Path storageStatePath = new File(FavoritesDownloader.ONLINE_SERVICES_BACKUP_DIRECTORY, "storage.json").toPath();
 			final Browser loginBrowser = playwright.chromium().launch(new LaunchOptions().setHeadless(false));
 			final BrowserContext loginBrowserContext = loginBrowser.newContext(new NewContextOptions()
@@ -121,7 +119,7 @@ public class Main {
 				final byte[] taggedImage = downloader.downloadFavorite(favorite, page);
 
 				if (nixplay != null) {
-					final Album album = nixplay.getOrCreateNextNonFullAlbum(downloader.getServiceName() + " Favorites ");
+					final Album album = nixplay.getOrCreateAlbum(downloader.getServiceName() + " Favorites ");
 					final Playlist playlist = nixplay.getOrCreatePlaylist(album);
 					final String filename = downloader.getFilename(favorite);
 

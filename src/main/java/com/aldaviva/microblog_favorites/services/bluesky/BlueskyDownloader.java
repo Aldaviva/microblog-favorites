@@ -1,5 +1,7 @@
 package com.aldaviva.microblog_favorites.services.bluesky;
 
+import static com.microsoft.playwright.assertions.PlaywrightAssertions.*;
+
 import com.aldaviva.microblog_favorites.ConfigurationFactory;
 import com.aldaviva.microblog_favorites.FavoritePost;
 import com.aldaviva.microblog_favorites.FavoritesDownloader;
@@ -7,9 +9,9 @@ import com.aldaviva.microblog_favorites.services.bluesky.BlueskySchema.Favorites
 import com.aldaviva.microblog_favorites.services.bluesky.BlueskySchema.FeedItem;
 import com.aldaviva.microblog_favorites.services.bluesky.BlueskySchema.Post;
 
+import com.microsoft.playwright.Locator;
 import com.microsoft.playwright.Page;
 import com.microsoft.playwright.Page.AddStyleTagOptions;
-import com.microsoft.playwright.Page.ClickOptions;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.core.UriBuilder;
 import java.net.PasswordAuthentication;
@@ -44,14 +46,38 @@ public class BlueskyDownloader extends FavoritesDownloader<FavoritePost> {
 			bluesky.signOut();
 		}
 
-		final PasswordAuthentication credentials = ConfigurationFactory.getBlueskyCredentials();
-		LOGGER.debug("Signing in with username {}", credentials.getUserName());
-		handle = bluesky.signIn(credentials);
+		final PasswordAuthentication appCredentials = ConfigurationFactory.getBlueskyCredentials(true);
+		LOGGER.debug("Signing in with username {}", appCredentials.getUserName());
+		handle = bluesky.signIn(appCredentials);
 
 		page.navigate("https://bsky.app/settings/appearance");
-		LOGGER.info("Waiting for user to log in to Bluesky...");
+		LOGGER.info("Loading Bluesky apperance settings page...");
 
-		page.click("div[aria-label='Color mode'] div[aria-label='Dark']", new ClickOptions().setTimeout(ONE_HOUR_IN_MILLIS));
+		final Locator signInButton1 = page.getByTestId("signInButton");
+		final Locator darkColorModeButton = page.locator("div[aria-label='Color mode'] div[aria-label='Dark']");
+
+		assertThat(signInButton1.or(darkColorModeButton).first()).isVisible();
+		if (signInButton1.isVisible()) {
+			LOGGER.debug("Bluesky signed us out, clicking sign in button");
+			signInButton1.click();
+
+			final PasswordAuthentication userCredentials = ConfigurationFactory.getBlueskyCredentials(false);
+
+			final Locator otherAccount = page.getByTestId("chooseAddAccountBtn");
+			final Locator usernameField = page.getByTestId("loginUsernameInput");
+			assertThat(otherAccount.or(usernameField).first()).isVisible();
+			if (otherAccount.isVisible()) {
+				LOGGER.debug("Bluesky remembered previous username, clicking Other Account anyway");
+				otherAccount.click();
+			}
+
+			usernameField.fill(userCredentials.getUserName());
+			page.getByTestId("loginPasswordInput").fill(new String(userCredentials.getPassword()));
+			page.getByTestId("loginNextButton").click();
+			LOGGER.debug("Submitted sign in form with username and password");
+		}
+
+		darkColorModeButton.click();
 		page.click("div[aria-label='Dark theme'] div[aria-label='Dark']");
 	}
 
@@ -92,7 +118,7 @@ public class BlueskyDownloader extends FavoritesDownloader<FavoritePost> {
 
 	@Override
 	protected String getScreenshotSelector(final FavoritePost favorite) {
-		return "div[data-testid ^= 'postThreadItem-by-']:has(div[aria-label='Likes on this post'])";
+		return "div[data-testid ^= 'postThreadItem-by-']:has(*[aria-label='Likes on this post'])";
 	}
 
 	@Override
